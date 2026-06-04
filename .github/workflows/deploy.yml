@@ -1,0 +1,20 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Oder 'master', je nachdem wie dein Haupt-Branch heißt
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          token: ${{ secrets.SYNC_TOKEN }} # Hier den Namen deines Secrets eintragen
+          branch: gh-pages # Der Branch, auf dem die fertige Website live geht
+          folder: docs # Der Ordner, in dem deine index.html liegt (Punkt bedeutet Hauptverzeichnis)
