@@ -1,20 +1,24 @@
-name: Deploy to GitHub Pages
+name: Deploy External Repo to GitHub Pages
 
 on:
   push:
     branches:
-      - main  # Oder 'master', je nachdem wie dein Haupt-Branch heißt
+      - main  # Die Pipeline startet, wenn du in DIESEM Repo (x2) die YAML änderst
+  workflow_dispatch: # Erlaubt dir, die Pipeline jederzeit manuell per Button zu starten
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout External Code
         uses: actions/checkout@v4
+        with:
+          repository: 'steppentaucher/Stundenplan' # HIER: Trage den echten Namen von Account 1 und dessen Repo ein
+          ref: 'main'                  # Der Branch von Repo 1, den du klonen willst
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          token: ${{ secrets.SYNC_TOKEN }} # Hier den Namen deines Secrets eintragen
-          branch: gh-pages # Der Branch, auf dem die fertige Website live geht
-          folder: docs # Der Ordner, in dem deine index.html liegt (Punkt bedeutet Hauptverzeichnis)
+          token: ${{ secrets.SYNC_TOKEN }}
+          branch: gh-pages
+          folder: docs # Sucht nach dem 'docs'-Ordner, der DRÜBEN im Repo x1 liegt
