@@ -15,6 +15,7 @@ jobs:
         with:
           repository: 'steppentaucher/Stundenplan' # HIER: Trage den echten Namen von Account 1 und dessen Repo ein
           ref: 'main'                  # Der Branch von Repo 1, den du klonen willst
+          token: ${{ secrets.SYNC_TOKEN }} # HIER MITGEGEBEN: Der Schlüssel für das private Repo x1
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
