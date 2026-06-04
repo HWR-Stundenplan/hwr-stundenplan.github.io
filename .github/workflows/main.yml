@@ -20,6 +20,6 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          token: ${{ secrets.SYNC_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages
           folder: docs # Sucht nach dem 'docs'-Ordner, der DRÜBEN im Repo x1 liegt
