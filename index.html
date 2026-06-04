@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campus Navigator | HWR Berlin Stundenplan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-950">
+  <div class="min-h-screen">
+    <div class="bg-slate-950 text-white">
+      <div class="mx-auto flex max-w-[1480px] flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8 lg:flex-row lg:items-center lg:justify-between">
+        <div class="space-y-2">
+          <p class="text-sm uppercase tracking-[0.24em] text-sky-300">Campus Navigator</p>
+          <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">HWR FB2 Stundenplan</h1>
+          <p class="max-w-2xl text-slate-300 sm:text-base">Interaktiver Wochenplan mit automatischer Stundenplan-Auswahl, Wochen-Navigation und mobilem Layout.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <div class="flex items-center gap-2 rounded-2xl bg-slate-800/90 px-4 py-3 text-sm text-slate-200 shadow-sm ring-1 ring-white/10"> <span class="material-symbols-outlined">calendar_month</span> Aktuelle Woche anzeigen </div>
+          <div class="flex items-center gap-2 rounded-2xl bg-slate-800/90 px-4 py-3 text-sm text-slate-200 shadow-sm ring-1 ring-white/10"> <span class="material-symbols-outlined">school</span> FB2 &amp; Wirtschaftswissenschaften</div>
+        </div>
+      </div>
+    </div>
+
+    <main class="mx-auto max-w-[1480px] px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+      <section id="pageLayout" class="grid gap-6">
+        <div id="configPanel" class="space-y-4 rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Filter</p>
+              <h2 class="mt-2 text-2xl font-semibold text-slate-950">Stundenplan konfigurieren</h2>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="toggleFilterButton" class="filter-toggle" type="button" aria-expanded="true"><span class="material-symbols-outlined toggle-icon">expand_more</span>Filter</button>
+              <button id="resetCache" class="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100" type="button">
+                <span class="material-symbols-outlined">refresh</span> Cache löschen
+              </button>
+            </div>
+          </div>
+          <div id="configContent" class="space-y-4">
+            <div class="grid gap-4 md:grid-cols-3">
+              <label class="block">
+                <span class="mb-2 block text-sm font-medium text-slate-700">Semester</span>
+                <select id="semesterSelect" class="select-modern"></select>
+              </label>
+              <label class="block">
+                <span class="mb-2 block text-sm font-medium text-slate-700">Fachbereich</span>
+                <select id="facultySelect" class="select-modern"></select>
+              </label>
+              <label class="block">
+                <span class="mb-2 block text-sm font-medium text-slate-700">Kursgruppe</span>
+                <select id="courseSelect" class="select-modern"></select>
+              </label>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="block">
+                <span class="mb-2 block text-sm font-medium text-slate-700">Anzeige</span>
+                <div class="inline-flex items-center gap-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
+                  <input id="showProgressToggle" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                  <span class="text-sm text-slate-700">Prozent-Label für den Tagesfortschritt anzeigen</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4 rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Wochenansicht</p>
+              <h3 class="mt-2 text-xl font-semibold text-slate-950">Terminübersicht</h3>
+            </div>
+            <div class="date-range-selector">
+              <button id="prevWeek" class="nav-button" type="button"><span class="material-symbols-outlined">chevron_left</span></button>
+              <div class="date-range-content">
+                <span class="material-symbols-outlined calendar-icon">calendar_month</span>
+                <span id="dateRangeLabel" class="date-range-text">03. Juni - 09. Juni 2024</span>
+                <span id="weekBadge" class="week-badge">KW 23</span>
+              </div>
+              <button id="nextWeek" class="nav-button" type="button"><span class="material-symbols-outlined">chevron_right</span></button>
+            </div>
+          </div>
+          <div class="schedule-table-container scrollbar-thin">
+            <div class="schedule-grid-wrapper">
+              <div class="time-column" id="timeColumn"></div>
+              <div class="days-grid" id="daysGrid"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
