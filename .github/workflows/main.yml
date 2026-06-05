@@ -1,7 +1,7 @@
 name: Deploy External Repo to GitHub Pages
 on:
   schedule:
-    - cron: '15 2 * * *' # Startet jetzt jede Nacht um genau 02:15 Uhr UTC
+    - cron: '45 8 * * *' # Startet jetzt jede Nacht um genau 02:15 Uhr UTC
   push:
     branches:
       - main  # Die Pipeline startet, wenn du in DIESEM Repo (x2) die YAML änderst
