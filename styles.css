@@ -87,7 +87,467 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
   .event-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
   .event-card:active { transform: scale(0.98); }
   
-  /* Mobile filter panel */
-  #mobileConfigContent { overflow: hidden; transition: max-height 0.35s ease, opacity 0.25s ease, transform 0.35s ease; max-height: 2000px; opacity: 1; transform: translateY(0); }
-  #mobileConfigPanel.collapsed #mobileConfigContent { max-height: 0; opacity: 0; transform: translateY(-8px); }
+  /* Mobile filter panel - improved visual design and animation */
+  #mobileConfigPanel {
+    position: relative;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 24px;
+    overflow-y: auto;
+    max-height: none;
+    opacity: 1;
+    transform: translateY(0);
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #mobileConfigPanel.collapsed {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-10px);
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    overflow: hidden;
+  }
+  
+  /* Mobile filter button - positioned independently */
+  .filter-toggle-mobile {
+    position: relative;
+    z-index: 46;
+  }
+  .filter-toggle-mobile .toggle-icon {
+    transition: transform 0.25s ease;
+  }
+  .filter-toggle-mobile[aria-expanded="false"] .toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  /* Mobile progress display */
+  #mobileProgressDisplay {
+    animation: slideDown 0.3s ease-out;
+  }
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Mobile favorites display */
+  #mobileFavoritesDisplay {
+    animation: slideDown 0.3s ease-out;
+  }
+
+  /* Desktop favorites display */
+  #desktopFavoritesDisplay {
+    animation: slideDown 0.3s ease-out;
+  }
+
+  /* Click animation for star icons */
+  @keyframes starClick {
+    0% {
+      font-variation-settings: 'FILL' 0;
+      transform: rotate(0deg);
+    }
+    50% {
+      font-variation-settings: 'FILL' 1;
+      transform: rotate(180deg);
+    }
+    100% {
+      font-variation-settings: 'FILL' 0;
+      transform: rotate(360deg);
+    }
+  }
+
+  .star-click-animation {
+    animation: starClick 0.4s ease-in-out;
+  }
+
+  /* Button color transition */
+  #addToFavoritesDesktopPanel,
+  #addToFavoritesMobilePanel {
+    transition: background-color 0.3s ease;
+  }
+
+  /* Mobile action buttons */
+  #mobileConfigPanel button[id$="Mobile"] {
+    min-height: 64px;
+  }
+  #mobileConfigPanel button[id$="Mobile"]:active {
+    transform: scale(0.97);
+  }
+
+  /* Mobile favorites dropdown */
+  #favoritesDropdownMobile {
+    right: 0;
+  }
+}
+
+/* Favorites dropdown styles */
+#favoritesDropdown,
+#favoritesDropdownMobile {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.favorite-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: background-color 0.15s ease;
+}
+
+.favorite-item:hover {
+  background-color: #f1f5f9;
+}
+
+.favorite-item-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #0f172a;
+}
+
+.favorite-item-delete {
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  color: #ca8a04;
+  transition: background-color 0.15s ease;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.favorite-item-delete .material-symbols-outlined {
+  font-size: 1.125rem;
+  font-variation-settings: 'FILL' 1;
+}
+
+/* Progress button active state with glassmorphism */
+#toggleProgressLabel.progress-active,
+#toggleProgressLabelMobile.progress-active {
+  background: rgba(220, 252, 231, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(34, 197, 94, 0.25);
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.08), 0 2px 8px rgba(34, 197, 94, 0.05);
+  color: #166534;
+}
+
+/* Cool progress bar animations with glow effects */
+#desktopProgressBar {
+  position: relative;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #cbd5e1 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#desktopProgressBar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(37, 99, 235, 0.8) 0%, 
+    rgba(59, 130, 246, 0.9) 25%, 
+    rgba(96, 165, 250, 0.95) 50%, 
+    rgba(59, 130, 246, 0.9) 75%, 
+    rgba(37, 99, 235, 0.8) 100%);
+  background-size: 200% 100%;
+  animation: progressGlow 2s ease-in-out infinite;
+  border-radius: 999px;
+  box-shadow: 
+    0 0 20px rgba(59, 130, 246, 0.5),
+    0 0 40px rgba(59, 130, 246, 0.3),
+    0 0 60px rgba(59, 130, 246, 0.1);
+}
+
+@keyframes progressGlow {
+  0%, 100% {
+    background-position: 0% 50%;
+    box-shadow: 
+      0 0 20px rgba(59, 130, 246, 0.5),
+      0 0 40px rgba(59, 130, 246, 0.3),
+      0 0 60px rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    background-position: 100% 50%;
+    box-shadow: 
+      0 0 30px rgba(59, 130, 246, 0.7),
+      0 0 60px rgba(59, 130, 246, 0.5),
+      0 0 90px rgba(59, 130, 246, 0.3);
+  }
+}
+
+#desktopProgressBar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.4) 50%, 
+    transparent 100%);
+  animation: progressShine 2s ease-in-out infinite;
+}
+
+@keyframes progressShine {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 200%;
+  }
+}
+
+/* Mobile weekend progress bar with cool effects */
+.weekend-progress-bar {
+  position: relative;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #cbd5e1 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.weekend-progress-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(34, 197, 94, 0.8) 0%, 
+    rgba(74, 222, 128, 0.9) 25%, 
+    rgba(134, 236, 172, 0.95) 50%, 
+    rgba(74, 222, 128, 0.9) 75%, 
+    rgba(34, 197, 94, 0.8) 100%);
+  background-size: 200% 100%;
+  animation: weekendProgressGlow 2s ease-in-out infinite;
+  border-radius: 999px;
+  box-shadow: 
+    0 0 20px rgba(34, 197, 94, 0.5),
+    0 0 40px rgba(34, 197, 94, 0.3),
+    0 0 60px rgba(34, 197, 94, 0.1);
+}
+
+@keyframes weekendProgressGlow {
+  0%, 100% {
+    background-position: 0% 50%;
+    box-shadow: 
+      0 0 20px rgba(34, 197, 94, 0.5),
+      0 0 40px rgba(34, 197, 94, 0.3),
+      0 0 60px rgba(34, 197, 94, 0.1);
+  }
+  50% {
+    background-position: 100% 50%;
+    box-shadow: 
+      0 0 30px rgba(34, 197, 94, 0.7),
+      0 0 60px rgba(34, 197, 94, 0.5),
+      0 0 90px rgba(34, 197, 94, 0.3);
+  }
+}
+
+.weekend-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.4) 50%, 
+    transparent 100%);
+  animation: weekendProgressShine 2s ease-in-out infinite;
+}
+
+@keyframes weekendProgressShine {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 200%;
+  }
+}
+
+/* Mobile day progress bar with cool effects */
+[class^="day-progress-bar-"] {
+  position: relative;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #cbd5e1 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+[class^="day-progress-bar-"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(37, 99, 235, 0.8) 0%, 
+    rgba(59, 130, 246, 0.9) 25%, 
+    rgba(96, 165, 250, 0.95) 50%, 
+    rgba(59, 130, 246, 0.9) 75%, 
+    rgba(37, 99, 235, 0.8) 100%);
+  background-size: 200% 100%;
+  animation: dayProgressGlow 2s ease-in-out infinite;
+  border-radius: 999px;
+  box-shadow: 
+    0 0 20px rgba(59, 130, 246, 0.5),
+    0 0 40px rgba(59, 130, 246, 0.3),
+    0 0 60px rgba(59, 130, 246, 0.1);
+}
+
+@keyframes dayProgressGlow {
+  0%, 100% {
+    background-position: 0% 50%;
+    box-shadow: 
+      0 0 20px rgba(59, 130, 246, 0.5),
+      0 0 40px rgba(59, 130, 246, 0.3),
+      0 0 60px rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    background-position: 100% 50%;
+    box-shadow: 
+      0 0 30px rgba(59, 130, 246, 0.7),
+      0 0 60px rgba(59, 130, 246, 0.5),
+      0 0 90px rgba(59, 130, 246, 0.3);
+  }
+}
+
+[class^="day-progress-bar-"]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.4) 50%, 
+    transparent 100%);
+  animation: dayProgressShine 2s ease-in-out infinite;
+}
+
+@keyframes dayProgressShine {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 200%;
+  }
+}
+
+/* Progress container with glassmorphism effect */
+.weekend-progress-container,
+[class^="day-progress-animate"] {
+  position: relative;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 4px 16px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: containerFadeIn 0.5s ease-out;
+}
+
+.weekend-progress-container:hover,
+[class^="day-progress-animate"]:hover {
+  box-shadow: 
+    0 20px 40px -15px rgba(15, 23, 42, 0.12),
+    0 50px 100px -25px rgba(15, 23, 42, 0.18);
+}
+
+@keyframes containerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Progress percent text without glow effect */
+.weekend-progress-percent,
+[class^="day-progress-percent-"] {
+  text-shadow: none;
+  animation: none;
+}
+
+/* Desktop progress panel with enhanced effects */
+#desktopProgressPanel {
+  position: relative;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 4px 16px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: panelFadeIn 0.5s ease-out;
+}
+
+#desktopProgressPanel:hover {
+  box-shadow: 
+    0 20px 40px -15px rgba(15, 23, 42, 0.12),
+    0 50px 100px -25px rgba(15, 23, 42, 0.18);
+}
+
+@keyframes panelFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+#desktopProgressPercent {
+  text-shadow: none;
+  animation: none;
+}
+
+#desktopProgressPercent.percent-green,
+.weekend-progress-percent.percent-green,
+[class^="day-progress-percent-"].percent-green {
+  color: #16a34a !important;
+}
+
+/* Elastic rebound effect for progress bars */
+#desktopProgressBar,
+.weekend-progress-bar,
+[class^="day-progress-bar-"] {
+  transition: width 0.08s cubic-bezier(0.34, 1.56, 0.64, 1);
 }

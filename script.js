@@ -3,10 +3,62 @@ const FILTER_SEEN_KEY = 'st-plan-filter-seen';
 const SCHEDULE_CACHE_KEY = 'st-plan-schedule-cache';
 const SCHEDULE_CACHE_TIMESTAMP_KEY = 'st-plan-schedule-cache-timestamp';
 const PROGRESS_LABEL_KEY = 'st-plan-progress-label';
+const FAVORITES_KEY = 'st-plan-favorites';
+const PENDING_DELETE_KEY = 'st-plan-pending-delete';
+const DAILY_VISIT_KEY = 'st-plan-daily-visit';
 const CACHE_EXPIRY_HOURS = 24;
 let filterCollapsed = false;
 let hasInitialScrollOccurred = false;
-let showProgressLabel = localStorage.getItem(PROGRESS_LABEL_KEY) === 'true';
+let showProgressLabel = false;
+let shouldAnimateProgress = false;
+
+function hasVisitedToday() {
+  const todayKey = getLocalDateKey(new Date());
+  const lastVisit = localStorage.getItem(DAILY_VISIT_KEY);
+  return lastVisit === todayKey;
+}
+
+function markDailyVisit() {
+  const todayKey = getLocalDateKey(new Date());
+  localStorage.setItem(DAILY_VISIT_KEY, todayKey);
+}
+
+function animateProgress(element, targetPercent, duration = 1500) {
+  if (!element) return;
+  
+  element.style.width = '0%';
+  element.style.transition = 'none';
+  
+  setTimeout(() => {
+    element.style.transition = `width ${duration}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
+    element.style.width = targetPercent;
+  }, 50);
+}
+
+function getProgressColor(percent) {
+  // Interpolate from green (#16a34a) to green (#16a34a)
+  const startColor = { r: 22, g: 163, b: 74 };
+  const endColor = { r: 22, g: 163, b: 74 };
+  
+  const ratio = percent / 100;
+  const r = Math.round(startColor.r + (endColor.r - startColor.r) * ratio);
+  const g = Math.round(startColor.g + (endColor.g - startColor.g) * ratio);
+  const b = Math.round(startColor.b + (endColor.b - startColor.b) * ratio);
+  
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function updatePercentColor(element, percent) {
+  if (!element) return;
+  
+  if (percent >= 100) {
+    element.classList.add('percent-green');
+    element.style.color = '#16a34a';
+  } else {
+    element.classList.remove('percent-green');
+    element.style.color = getProgressColor(percent);
+  }
+}
 
 function getInitialFilterCollapsed() {
   const seenBefore = localStorage.getItem(FILTER_SEEN_KEY) !== null;
@@ -474,12 +526,35 @@ function renderMobileSchedule(grouped, weekDays, isInitialLoad) {
 
   const todayKey = getLocalDateKey(new Date());
   const dayIds = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  
-  scheduleContainer.innerHTML = weekDays.map((day, index) => {
+  const now = new Date();
+  const currentDayOfWeek = now.getDay();
+  const isWeekend = currentDayOfWeek === 0 || currentDayOfWeek === 6;
+
+  // Add weekend progress display if it's weekend and showProgressLabel is enabled
+  let weekendProgressHtml = '';
+  if (isWeekend && showProgressLabel) {
+    const animateClass = shouldAnimateProgress ? 'animate-progress' : '';
+    const initialWidth = shouldAnimateProgress ? '0%' : '100%';
+    const initialPercent = shouldAnimateProgress ? '0%' : '100%';
+    weekendProgressHtml = `
+      <div class="rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border border-blue-200 mb-6 weekend-progress-container">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-gray-700">Tagesfortschritt</span>
+          <span class="text-2xl font-bold text-[#002551] weekend-progress-percent">${initialPercent}</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="bg-[#002551] h-2 rounded-full transition-all duration-300 weekend-progress-bar ${animateClass}" style="width: ${initialWidth}"></div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">Wochenende - 100% abgeschlossen</p>
+      </div>
+    `;
+  }
+
+  scheduleContainer.innerHTML = weekendProgressHtml + weekDays.map((day, index) => {
     const key = getLocalDateKey(day);
     const eventsForDay = (grouped[key] || []).slice().sort((a, b) => new Date(a.start) - new Date(b.start));
     const merged = mergeConsecutiveEvents(eventsForDay);
-    
+
     const eventsHtml = merged.map((ev) => {
       const s = new Date(ev.start);
       const e = new Date(ev.end);
@@ -498,9 +573,9 @@ function renderMobileSchedule(grouped, weekDays, isInitialLoad) {
         typeLabel = 'O';
         typeColorClass = 'bg-green-50 text-green-700';
       }
-      
+
       const borderColor = isExam ? 'border-red-600' : isOnline ? 'border-green-600' : 'border-[#003a79]';
-      
+
       return `
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex transition-all active:scale-[0.98] event-card">
           <div class="w-1 ${borderColor}"></div>
@@ -526,8 +601,65 @@ function renderMobileSchedule(grouped, weekDays, isInitialLoad) {
     const isToday = getLocalDateKey(day) === todayKey;
     const dayName = dayNames[day.getDay()];
     const borderClass = isToday ? 'border-red-600' : 'border-blue-600';
-    
+
     const timeIndicatorHtml = buildCurrentTimeIndicator(day, eventsForDay);
+
+    let progressDisplayHtml = '';
+    console.log('Mobile render - day:', day, 'todayKey:', todayKey, 'isToday:', isToday, 'showProgressLabel:', showProgressLabel, 'isWeekend:', isWeekend);
+    if (isToday && showProgressLabel) {
+      let progressPercentValue = 0;
+      let progressText = 'Heute keine Veranstaltungen';
+
+      if (eventsForDay.length > 0) {
+        const dayStart = eventsForDay.reduce((min, ev) => {
+          const start = new Date(ev.start).getTime();
+          return Math.min(min, start);
+        }, Infinity);
+        const dayEnd = eventsForDay.reduce((max, ev) => {
+          const end = new Date(ev.end).getTime();
+          return Math.max(max, end);
+        }, -Infinity);
+
+        if (dayStart < dayEnd) {
+          const currentHour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+          const startHour = new Date(dayStart).getHours() + new Date(dayStart).getMinutes() / 60;
+          const endHour = new Date(dayEnd).getHours() + new Date(dayEnd).getMinutes() / 60;
+
+          if (currentHour < startHour) {
+            progressPercentValue = 0;
+          } else if (currentHour > endHour) {
+            progressPercentValue = 100;
+          } else {
+            progressPercentValue = ((currentHour - startHour) / (endHour - startHour)) * 100;
+          }
+
+          const currentTimeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+          const startTimeStr = new Date(dayStart).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+          const endTimeStr = new Date(dayEnd).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+          progressText = `Jetzt: ${currentTimeStr} | Tag: ${startTimeStr} - ${endTimeStr}`;
+        }
+      } else if (isWeekend) {
+        progressPercentValue = 100;
+        progressText = 'Wochenende - 100% abgeschlossen';
+      }
+
+      const initialPercent = shouldAnimateProgress ? '0%' : `${Math.round(progressPercentValue)}%`;
+      const initialWidth = shouldAnimateProgress ? '0%' : `${progressPercentValue}%`;
+      const animateClass = shouldAnimateProgress ? 'day-progress-animate' : '';
+      
+      progressDisplayHtml = `
+        <div class="rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border border-blue-200" style="margin-top: 1rem;">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-gray-700">Tagesfortschritt</span>
+            <span class="text-2xl font-bold text-[#002551] day-progress-percent-${index}">${initialPercent}</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-[#002551] h-2 rounded-full transition-all duration-300 day-progress-bar-${index} ${animateClass}" style="width: ${initialWidth}"></div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">${progressText}</p>
+        </div>
+      `;
+    }
 
     return `
       <section id="${dayIds[index]}" class="space-y-4">
@@ -539,14 +671,103 @@ function renderMobileSchedule(grouped, weekDays, isInitialLoad) {
         <div class="space-y-3">
           ${eventsHtml}
         </div>
+        ${progressDisplayHtml}
       </section>
     `;
   }).join('');
-  
+
   // Scroll to current day only on initial load
   if (isInitialLoad && !hasInitialScrollOccurred) {
     hasInitialScrollOccurred = true;
     setTimeout(scrollToCurrentDay, 100);
+  }
+
+  // Animate weekend progress if needed
+  if (isWeekend && showProgressLabel && shouldAnimateProgress) {
+    setTimeout(() => {
+      const progressBar = document.querySelector('.weekend-progress-bar');
+      const progressPercent = document.querySelector('.weekend-progress-percent');
+      if (progressBar) {
+        progressBar.style.transition = 'width 1500ms cubic-bezier(0.34, 1.56, 0.64, 1)';
+        progressBar.style.width = '100%';
+      }
+      if (progressPercent) {
+        let currentProgress = 0;
+        const animationInterval = setInterval(() => {
+          currentProgress += 2;
+          if (currentProgress > 100) currentProgress = 100;
+          updatePercentColor(progressPercent, currentProgress);
+          if (currentProgress >= 100) {
+            clearInterval(animationInterval);
+            progressPercent.textContent = '100%';
+          }
+        }, 30);
+        setTimeout(() => {
+          progressPercent.textContent = '100%';
+        }, 1500);
+      }
+    }, 100);
+  }
+
+  // Animate day progress if needed
+  if (showProgressLabel && shouldAnimateProgress && !isWeekend) {
+    setTimeout(() => {
+      weekDays.forEach((day, index) => {
+        const dayKey = getLocalDateKey(day);
+        if (dayKey === todayKey) {
+          const progressBar = document.querySelector(`.day-progress-bar-${index}`);
+          const progressPercent = document.querySelector(`.day-progress-percent-${index}`);
+          if (progressBar) {
+            const eventsForDay = (grouped[dayKey] || []).slice().sort((a, b) => new Date(a.start) - new Date(b.start));
+            let targetPercent = 0;
+            
+            if (eventsForDay.length > 0) {
+              const dayStart = eventsForDay.reduce((min, ev) => {
+                const start = new Date(ev.start).getTime();
+                return Math.min(min, start);
+              }, Infinity);
+              const dayEnd = eventsForDay.reduce((max, ev) => {
+                const end = new Date(ev.end).getTime();
+                return Math.max(max, end);
+              }, -Infinity);
+
+              if (dayStart < dayEnd) {
+                const currentHour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+                const startHour = new Date(dayStart).getHours() + new Date(dayStart).getMinutes() / 60;
+                const endHour = new Date(dayEnd).getHours() + new Date(dayEnd).getMinutes() / 60;
+
+                if (currentHour < startHour) {
+                  targetPercent = 0;
+                } else if (currentHour > endHour) {
+                  targetPercent = 100;
+                } else {
+                  targetPercent = ((currentHour - startHour) / (endHour - startHour)) * 100;
+                }
+              }
+            }
+
+            progressBar.style.transition = 'width 1500ms cubic-bezier(0.34, 1.56, 0.64, 1)';
+            progressBar.style.width = `${targetPercent}%`;
+            
+            if (progressPercent) {
+              let currentProgress = 0;
+              const animationInterval = setInterval(() => {
+                currentProgress += 2;
+                if (currentProgress > targetPercent) currentProgress = targetPercent;
+                updatePercentColor(progressPercent, currentProgress);
+                if (currentProgress >= targetPercent) {
+                  clearInterval(animationInterval);
+                  progressPercent.textContent = `${Math.round(targetPercent)}%`;
+                }
+              }, 30);
+              setTimeout(() => {
+                progressPercent.textContent = `${Math.round(targetPercent)}%`;
+              }, 1500);
+            }
+          }
+        }
+      });
+    }, 100);
   }
 }
 
@@ -622,22 +843,418 @@ function downloadICS(icsContent, filename) {
 function scrollToCurrentDay() {
   const now = new Date();
   const currentDayIndex = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  
-  // Map to weekday ID (monday, tuesday, wednesday, thursday, friday)
+
+  // Map to weekday ID (monday, tuesday, wednesday, thursday, friday, saturday)
   let targetDayId;
-  if (currentDayIndex === 0 || currentDayIndex === 6) {
-    // Weekend: default to Monday
+  const saturdaySection = document.getElementById('saturday');
+  const hasSaturdayEvents = saturdaySection !== null;
+
+  if (currentDayIndex === 0) {
+    // Sunday: always go to Monday of next week
     targetDayId = 'monday';
+  } else if (currentDayIndex === 6) {
+    // Saturday: check if there are Saturday events
+    if (hasSaturdayEvents) {
+      targetDayId = 'saturday';
+    } else {
+      // No Saturday events: go to Monday of next week
+      targetDayId = 'monday';
+    }
   } else {
     // Weekday: map to ID
     const dayIds = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     targetDayId = dayIds[currentDayIndex];
   }
-  
+
   const targetSection = document.getElementById(targetDayId);
   if (targetSection) {
-    targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
+}
+
+function updateDesktopProgressDisplay(data, activeSource, currentWeekStart) {
+  const progressPercent = document.getElementById('desktopProgressPercent');
+  const progressBar = document.getElementById('desktopProgressBar');
+  const progressTime = document.getElementById('desktopProgressTime');
+
+  if (!progressPercent || !progressBar || !progressTime) return;
+
+  const now = new Date();
+  const todayKey = getLocalDateKey(now);
+  const weekDays = Array.from({ length: 5 }, (_, index) => addDays(currentWeekStart, index));
+
+  let events = activeSource ? data.events.filter((event) => event.sourceId === activeSource) : data.events;
+  const grouped = groupEventsByDay(events);
+  const eventsForDay = (grouped[todayKey] || []).slice().sort((a, b) => new Date(a.start) - new Date(b.start));
+
+  const currentDayOfWeek = now.getDay();
+  const isWeekend = currentDayOfWeek === 0 || currentDayOfWeek === 6;
+
+  if (isWeekend) {
+    progressPercent.textContent = '0%';
+    progressTime.textContent = 'Wochenende - 100% abgeschlossen';
+    if (shouldAnimateProgress) {
+      animateProgress(progressBar, '100%', 1500);
+      let currentProgress = 0;
+      const animationInterval = setInterval(() => {
+        currentProgress += 2;
+        if (currentProgress > 100) currentProgress = 100;
+        updatePercentColor(progressPercent, currentProgress);
+        if (currentProgress >= 100) {
+          clearInterval(animationInterval);
+          progressPercent.textContent = '100%';
+        }
+      }, 30);
+      setTimeout(() => {
+        progressPercent.textContent = '100%';
+      }, 1500);
+    } else {
+      progressBar.style.width = '100%';
+      progressPercent.textContent = '100%';
+      updatePercentColor(progressPercent, 100);
+    }
+    return;
+  }
+
+  if (eventsForDay.length === 0) {
+    progressPercent.textContent = '0%';
+    progressBar.style.width = '0%';
+    progressTime.textContent = 'Heute keine Veranstaltungen';
+    return;
+  }
+
+  const dayStart = eventsForDay.reduce((min, ev) => {
+    const start = new Date(ev.start).getTime();
+    return Math.min(min, start);
+  }, Infinity);
+  const dayEnd = eventsForDay.reduce((max, ev) => {
+    const end = new Date(ev.end).getTime();
+    return Math.max(max, end);
+  }, -Infinity);
+
+  if (dayStart >= dayEnd) {
+    progressPercent.textContent = '0%';
+    progressBar.style.width = '0%';
+    progressTime.textContent = 'Ungültige Zeitangabe';
+    return;
+  }
+
+  const currentHour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+  const startHour = new Date(dayStart).getHours() + new Date(dayStart).getMinutes() / 60;
+  const endHour = new Date(dayEnd).getHours() + new Date(dayEnd).getMinutes() / 60;
+
+  let progressPercentValue;
+  if (currentHour < startHour) {
+    progressPercentValue = 0;
+  } else if (currentHour > endHour) {
+    progressPercentValue = 100;
+  } else {
+    progressPercentValue = ((currentHour - startHour) / (endHour - startHour)) * 100;
+  }
+
+  const finalPercent = `${Math.round(progressPercentValue)}%`;
+  
+  if (shouldAnimateProgress) {
+    progressPercent.textContent = '0%';
+    updatePercentColor(progressPercent, 0);
+    animateProgress(progressBar, finalPercent, 1500);
+    let currentProgress = 0;
+    const animationInterval = setInterval(() => {
+      currentProgress += 2;
+      if (currentProgress > progressPercentValue) currentProgress = progressPercentValue;
+      updatePercentColor(progressPercent, currentProgress);
+      if (currentProgress >= progressPercentValue) {
+        clearInterval(animationInterval);
+        progressPercent.textContent = finalPercent;
+      }
+    }, 30);
+    setTimeout(() => {
+      progressPercent.textContent = finalPercent;
+    }, 1500);
+  } else {
+    progressPercent.textContent = finalPercent;
+    progressBar.style.width = finalPercent;
+    updatePercentColor(progressPercent, progressPercentValue);
+  }
+
+  const currentTimeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  const startTimeStr = new Date(dayStart).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  const endTimeStr = new Date(dayEnd).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  progressTime.textContent = `Jetzt: ${currentTimeStr} | Tag: ${startTimeStr} - ${endTimeStr}`;
+}
+
+function getFavorites() {
+  try {
+    const favorites = localStorage.getItem(FAVORITES_KEY);
+    return favorites ? JSON.parse(favorites) : [];
+  } catch (error) {
+    console.warn('Failed to load favorites:', error);
+    return [];
+  }
+}
+
+function saveFavorites(favorites) {
+  try {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+  } catch (error) {
+    console.warn('Failed to save favorites:', error);
+  }
+}
+
+function getPendingDelete() {
+  try {
+    const pending = localStorage.getItem(PENDING_DELETE_KEY);
+    return pending ? JSON.parse(pending) : [];
+  } catch (error) {
+    console.warn('Failed to load pending delete:', error);
+    return [];
+  }
+}
+
+function savePendingDelete(pending) {
+  try {
+    localStorage.setItem(PENDING_DELETE_KEY, JSON.stringify(pending));
+  } catch (error) {
+    console.warn('Failed to save pending delete:', error);
+  }
+}
+
+function addToPendingDelete(favoriteId) {
+  const pending = getPendingDelete();
+  if (!pending.includes(favoriteId)) {
+    pending.push(favoriteId);
+    savePendingDelete(pending);
+  }
+}
+
+function removeFromPendingDelete(favoriteId) {
+  const pending = getPendingDelete();
+  const index = pending.indexOf(favoriteId);
+  if (index > -1) {
+    pending.splice(index, 1);
+    savePendingDelete(pending);
+  }
+}
+
+function isPendingDelete(favoriteId) {
+  const pending = getPendingDelete();
+  return pending.includes(favoriteId);
+}
+
+function processPendingDelete(data) {
+  const pending = getPendingDelete();
+  if (pending.length === 0) return;
+
+  const favorites = getFavorites();
+  const updatedFavorites = favorites.filter(f => !pending.includes(f.id));
+  saveFavorites(updatedFavorites);
+  savePendingDelete([]);
+
+  // Re-render favorites list
+  renderFavoritesList(data);
+
+  // Update button states
+  const currentFavoriteLabelDesktop = document.getElementById('currentFavoriteLabelDesktop');
+  const addToFavoritesDesktopPanel = document.getElementById('addToFavoritesDesktopPanel');
+  const currentFavoriteLabelMobile = document.getElementById('currentFavoriteLabelMobile');
+  const addToFavoritesMobilePanel = document.getElementById('addToFavoritesMobilePanel');
+
+  if (currentFavoriteLabelDesktop && addToFavoritesDesktopPanel) {
+    const semesterSelect = document.getElementById('semesterSelect');
+    const facultySelect = document.getElementById('facultySelect');
+    const courseSelect = document.getElementById('courseSelect');
+    updateCurrentFavoriteLabel(data, semesterSelect, facultySelect, courseSelect, currentFavoriteLabelDesktop, addToFavoritesDesktopPanel);
+  }
+
+  if (currentFavoriteLabelMobile && addToFavoritesMobilePanel) {
+    const semesterSelectMobile = document.getElementById('semesterSelectMobile');
+    const facultySelectMobile = document.getElementById('facultySelectMobile');
+    const courseSelectMobile = document.getElementById('courseSelectMobile');
+    updateCurrentFavoriteLabel(data, semesterSelectMobile, facultySelectMobile, courseSelectMobile, currentFavoriteLabelMobile, addToFavoritesMobilePanel);
+  }
+}
+
+function generateFavoriteAbbreviation(semester, faculty, courseTitle) {
+  const semNum = semester.replace('semester', '');
+  const courseLetter = courseTitle.trim().slice(-1).toUpperCase();
+  return `S${semNum} ${faculty} ${courseLetter}`;
+}
+
+function updateCurrentFavoriteLabel(data, semesterSelect, facultySelect, courseSelect, labelElement, addButton) {
+  if (!labelElement || !semesterSelect || !facultySelect || !courseSelect) return;
+
+  const semester = semesterSelect.value;
+  const faculty = facultySelect.value;
+  const courseId = courseSelect.value;
+
+  if (!semester || !faculty || !courseId) {
+    labelElement.textContent = '';
+    if (addButton) addButton.disabled = true;
+    return;
+  }
+
+  const course = data.schedules.find(s => s.id === courseId);
+  if (!course) {
+    labelElement.textContent = '';
+    if (addButton) addButton.disabled = true;
+    return;
+  }
+
+  const abbreviation = generateFavoriteAbbreviation(semester, faculty, course.title);
+  labelElement.textContent = abbreviation;
+
+  // Check if this course is already in favorites
+  const favorites = getFavorites();
+  const isAlreadyFavorite = favorites.some(f =>
+    f.semester === semester &&
+    f.faculty === faculty &&
+    f.courseId === courseId
+  );
+
+  if (addButton) {
+    addButton.disabled = isAlreadyFavorite;
+    if (isAlreadyFavorite) {
+      addButton.textContent = 'Hinzugefügt';
+      addButton.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+      addButton.textContent = 'Hinzufügen';
+      addButton.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+  }
+}
+
+function addCurrentToFavorites(data, semesterSelect, facultySelect, courseSelect) {
+  const semester = semesterSelect ? semesterSelect.value : '';
+  const faculty = facultySelect ? facultySelect.value : '';
+  const courseId = courseSelect ? courseSelect.value : '';
+
+  if (!semester || !faculty || !courseId) {
+    alert('Bitte wähle zuerst einen Stundenplan aus.');
+    return;
+  }
+
+  const course = data.schedules.find(s => s.id === courseId);
+  if (!course) return;
+
+  const favorites = getFavorites();
+
+  // Check if this course is already in favorites
+  const existingFavorite = favorites.find(f =>
+    f.semester === semester &&
+    f.faculty === faculty &&
+    f.courseId === courseId
+  );
+
+  if (existingFavorite) {
+    // Remove from favorites
+    const filtered = favorites.filter(f => f.id !== existingFavorite.id);
+    saveFavorites(filtered);
+    renderFavoritesList(data);
+
+    // Update button states
+    const currentFavoriteLabelDesktop = document.getElementById('currentFavoriteLabelDesktop');
+    const addToFavoritesDesktopPanel = document.getElementById('addToFavoritesDesktopPanel');
+    const currentFavoriteLabelMobile = document.getElementById('currentFavoriteLabelMobile');
+    const addToFavoritesMobilePanel = document.getElementById('addToFavoritesMobilePanel');
+
+    if (currentFavoriteLabelDesktop && addToFavoritesDesktopPanel) {
+      updateCurrentFavoriteLabel(data, semesterSelect, facultySelect, courseSelect, currentFavoriteLabelDesktop, addToFavoritesDesktopPanel);
+    }
+
+    if (currentFavoriteLabelMobile && addToFavoritesMobilePanel) {
+      updateCurrentFavoriteLabel(data, semesterSelectMobile, facultySelectMobile, courseSelectMobile, currentFavoriteLabelMobile, addToFavoritesMobilePanel);
+    }
+
+    return;
+  }
+
+  // Add to favorites
+  const abbreviation = generateFavoriteAbbreviation(semester, faculty, course.title);
+
+  const newFavorite = {
+    id: Date.now().toString(),
+    semester,
+    faculty,
+    courseId,
+    courseTitle: course.title,
+    abbreviation,
+    createdAt: new Date().toISOString()
+  };
+
+  favorites.push(newFavorite);
+  saveFavorites(favorites);
+  renderFavoritesList(data);
+
+  // Update button states
+  const currentFavoriteLabelDesktop = document.getElementById('currentFavoriteLabelDesktop');
+  const addToFavoritesDesktopPanel = document.getElementById('addToFavoritesDesktopPanel');
+  const currentFavoriteLabelMobile = document.getElementById('currentFavoriteLabelMobile');
+  const addToFavoritesMobilePanel = document.getElementById('addToFavoritesMobilePanel');
+
+  if (currentFavoriteLabelDesktop && addToFavoritesDesktopPanel) {
+    updateCurrentFavoriteLabel(data, semesterSelect, facultySelect, courseSelect, currentFavoriteLabelDesktop, addToFavoritesDesktopPanel);
+  }
+
+  if (currentFavoriteLabelMobile && addToFavoritesMobilePanel) {
+    updateCurrentFavoriteLabel(data, semesterSelectMobile, facultySelectMobile, courseSelectMobile, currentFavoriteLabelMobile, addToFavoritesMobilePanel);
+  }
+
+  alert(`"${abbreviation}" wurde zu den Favoriten hinzugefügt.`);
+}
+
+function deleteFavorite(favoriteId, data) {
+  const favorites = getFavorites();
+  const filtered = favorites.filter(f => f.id !== favoriteId);
+  saveFavorites(filtered);
+  renderFavoritesList(data);
+}
+
+function loadFavorite(favorite, semesterSelect, facultySelect, courseSelect, data, currentWeekStart, searchQuery) {
+  if (semesterSelect) semesterSelect.value = favorite.semester;
+  if (facultySelect) facultySelect.value = favorite.faculty;
+  if (courseSelect) courseSelect.value = favorite.courseId;
+  
+  saveSelection();
+  renderSchedule(data, favorite.courseId, currentWeekStart, searchQuery, false);
+}
+
+function renderFavoritesList(data) {
+  const favoritesList = document.getElementById('favoritesList');
+  const favoritesListMobile = document.getElementById('favoritesListMobile');
+  const favoritesListDesktopPanel = document.getElementById('favoritesListDesktopPanel');
+  const favoritesListMobilePanel = document.getElementById('favoritesListMobilePanel');
+  const favorites = getFavorites();
+  const pendingDelete = getPendingDelete();
+
+  const renderList = (container) => {
+    if (!container) return;
+
+    if (favorites.length === 0) {
+      const textClass = container.id.includes('Mobile') || container.id.includes('mobile') ? 'text-gray-500' : 'text-slate-500';
+      container.innerHTML = `<p class="text-sm ${textClass} text-center py-2 w-full">Keine Favoriten gespeichert</p>`;
+      return;
+    }
+
+    container.innerHTML = favorites.map(fav => {
+      const isPending = pendingDelete.includes(fav.id);
+      const starClass = isPending ? 'text-gray-400' : 'text-yellow-500';
+      const starFill = isPending ? '' : 'font-variation-settings: \'FILL\' 1;';
+
+      return `
+      <div class="favorite-item" data-favorite-id="${fav.id}">
+        <span class="favorite-item-name">${fav.abbreviation}</span>
+        <button class="favorite-item-delete" data-delete-id="${fav.id}" type="button">
+          <span class="material-symbols-outlined ${starClass}" style="${starFill}">star</span>
+        </button>
+      </div>
+    `;
+    }).join('');
+  };
+
+  renderList(favoritesList);
+  renderList(favoritesListMobile);
+  renderList(favoritesListDesktopPanel);
+  renderList(favoritesListMobilePanel);
 }
 
 async function init() {
@@ -674,6 +1291,10 @@ async function init() {
     const clearSearchButton = document.getElementById('clearSearch');
     const toggleButton = document.getElementById('toggleFilterButton');
     const toggleProgressButton = document.getElementById('toggleProgressLabel');
+    const favoritesButton = document.getElementById('favoritesButton');
+    const addToFavoritesButton = document.getElementById('addToFavorites');
+    const currentFavoriteLabelDesktop = document.getElementById('currentFavoriteLabelDesktop');
+    const addToFavoritesDesktopPanel = document.getElementById('addToFavoritesDesktopPanel');
 
     // Mobile controls
     const semesterSelectMobile = document.getElementById('semesterSelectMobile');
@@ -687,6 +1308,10 @@ async function init() {
     const clearSearchButtonMobile = document.getElementById('clearSearchMobile');
     const toggleButtonMobile = document.getElementById('toggleFilterButtonMobile');
     const toggleProgressButtonMobile = document.getElementById('toggleProgressLabelMobile');
+    const favoritesButtonMobile = document.getElementById('favoritesButtonMobile');
+    const addToFavoritesButtonMobile = document.getElementById('addToFavoritesMobile');
+    const currentFavoriteLabelMobile = document.getElementById('currentFavoriteLabelMobile');
+    const addToFavoritesMobilePanel = document.getElementById('addToFavoritesMobilePanel');
 
     const cacheKey = 'st-plan-selection-v1';
     const schedules = data.schedules || [];
@@ -773,6 +1398,7 @@ async function init() {
         syncSelects(facultySelect, facultySelectMobile);
         syncSelects(courseSelect, courseSelectMobile);
         saveSelection();
+        updateCurrentFavoriteLabel(data, semesterSelect, facultySelect, courseSelect, currentFavoriteLabelDesktop, addToFavoritesDesktopPanel);
         renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
       });
     }
@@ -783,6 +1409,7 @@ async function init() {
         syncSelects(facultySelect, facultySelectMobile);
         syncSelects(courseSelect, courseSelectMobile);
         saveSelection();
+        updateCurrentFavoriteLabel(data, semesterSelect, facultySelect, courseSelect, currentFavoriteLabelDesktop, addToFavoritesDesktopPanel);
         renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
       });
     }
@@ -792,6 +1419,7 @@ async function init() {
         activeSource = courseSelect.value;
         syncSelects(courseSelect, courseSelectMobile);
         saveSelection();
+        updateCurrentFavoriteLabel(data, semesterSelect, facultySelect, courseSelect, currentFavoriteLabelDesktop, addToFavoritesDesktopPanel);
         renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
       });
     }
@@ -839,8 +1467,41 @@ async function init() {
 
     if (currentWeekButton) {
       currentWeekButton.addEventListener('click', () => {
+        const now = new Date();
+        const currentDayIndex = now.getDay();
+        
+        // Collapse mobile filter panel
+        const mobileConfigPanel = document.getElementById('mobileConfigPanel');
+        const toggleButtonMobile = document.getElementById('toggleFilterButtonMobile');
+        if (mobileConfigPanel && !mobileConfigPanel.classList.contains('collapsed')) {
+          mobileConfigPanel.classList.add('collapsed');
+          if (toggleButtonMobile) {
+            toggleButtonMobile.setAttribute('aria-expanded', 'false');
+            const icon = toggleButtonMobile.querySelector('.toggle-icon');
+            if (icon) icon.textContent = 'expand_more';
+          }
+        }
+        
         currentWeekStart = getMonday(new Date());
         renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+        
+        // Check if we need to switch to next week (after rendering to check for Saturday events)
+        setTimeout(() => {
+          const saturdaySection = document.getElementById('saturday');
+          const hasSaturdayEvents = saturdaySection !== null;
+          
+          if (currentDayIndex === 0) {
+            // Sunday: always go to next week
+            currentWeekStart = addDays(currentWeekStart, 7);
+            renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+          } else if (currentDayIndex === 6 && !hasSaturdayEvents) {
+            // Saturday without events: go to next week
+            currentWeekStart = addDays(currentWeekStart, 7);
+            renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+          }
+          
+          scrollToCurrentDay();
+        }, 100);
       });
     }
 
@@ -871,9 +1532,18 @@ async function init() {
 
     if (toggleProgressButton) {
       toggleProgressButton.addEventListener('click', () => {
-        showProgressLabel = !showProgressLabel;
-        localStorage.setItem(PROGRESS_LABEL_KEY, String(showProgressLabel));
-        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+        const progressPanel = document.getElementById('desktopProgressPanel');
+        if (progressPanel) {
+          const isHidden = progressPanel.classList.contains('hidden');
+          if (isHidden) {
+            progressPanel.classList.remove('hidden');
+            updateDesktopProgressDisplay(data, activeSource, currentWeekStart);
+            toggleProgressButton.classList.add('progress-active');
+          } else {
+            progressPanel.classList.add('hidden');
+            toggleProgressButton.classList.remove('progress-active');
+          }
+        }
       });
     }
 
@@ -881,9 +1551,139 @@ async function init() {
       toggleProgressButtonMobile.addEventListener('click', () => {
         showProgressLabel = !showProgressLabel;
         localStorage.setItem(PROGRESS_LABEL_KEY, String(showProgressLabel));
+        if (showProgressLabel) {
+          toggleProgressButtonMobile.classList.add('progress-active');
+        } else {
+          toggleProgressButtonMobile.classList.remove('progress-active');
+        }
         renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
       });
     }
+
+    // Favorites button - desktop
+    if (favoritesButton) {
+      favoritesButton.addEventListener('click', () => {
+        const starIcon = favoritesButton.querySelector('.material-symbols-outlined');
+        if (starIcon) {
+          starIcon.classList.remove('star-click-animation');
+          void starIcon.offsetWidth; // Trigger reflow
+          starIcon.classList.add('star-click-animation');
+        }
+
+        const favoritesDisplay = document.getElementById('desktopFavoritesDisplay');
+        if (favoritesDisplay) {
+          const isHidden = favoritesDisplay.classList.contains('hidden');
+          if (isHidden) {
+            favoritesDisplay.classList.remove('hidden');
+          } else {
+            favoritesDisplay.classList.add('hidden');
+            // Process pending delete when closing
+            processPendingDelete(data);
+          }
+        }
+      });
+    }
+
+    if (addToFavoritesButton) {
+      addToFavoritesButton.addEventListener('click', () => {
+        addCurrentToFavorites(data, semesterSelect, facultySelect, courseSelect);
+      });
+    }
+
+    // Favorites button - mobile
+    if (favoritesButtonMobile) {
+      favoritesButtonMobile.addEventListener('click', () => {
+        const starIcon = favoritesButtonMobile.querySelector('.material-symbols-outlined');
+        if (starIcon) {
+          starIcon.classList.remove('star-click-animation');
+          void starIcon.offsetWidth; // Trigger reflow
+          starIcon.classList.add('star-click-animation');
+        }
+
+        const favoritesDisplay = document.getElementById('mobileFavoritesDisplay');
+        if (favoritesDisplay) {
+          const isHidden = favoritesDisplay.classList.contains('hidden');
+          if (isHidden) {
+            favoritesDisplay.classList.remove('hidden');
+          } else {
+            favoritesDisplay.classList.add('hidden');
+            // Process pending delete when closing
+            processPendingDelete(data);
+          }
+        }
+      });
+    }
+
+    if (addToFavoritesButtonMobile) {
+      addToFavoritesButtonMobile.addEventListener('click', () => {
+        addCurrentToFavorites(data, semesterSelectMobile, facultySelectMobile, courseSelectMobile);
+      });
+    }
+
+    // Favorites panel buttons
+
+    if (addToFavoritesMobilePanel) {
+      addToFavoritesMobilePanel.addEventListener('click', () => {
+        addCurrentToFavorites(data, semesterSelectMobile, facultySelectMobile, courseSelectMobile);
+      });
+    }
+
+    if (addToFavoritesDesktopPanel) {
+      addToFavoritesDesktopPanel.addEventListener('click', () => {
+        addCurrentToFavorites(data, semesterSelect, facultySelect, courseSelect);
+      });
+    }
+
+    // Handle favorite item clicks and delete buttons
+    document.addEventListener('click', (e) => {
+      const deleteBtn = e.target.closest('.favorite-item-delete');
+      const favoriteItem = e.target.closest('.favorite-item');
+
+      if (deleteBtn) {
+        e.stopPropagation();
+        const favoriteId = deleteBtn.dataset.deleteId;
+        const starIcon = deleteBtn.querySelector('.material-symbols-outlined');
+
+        if (isPendingDelete(favoriteId)) {
+          // Restore favorite
+          removeFromPendingDelete(favoriteId);
+          renderFavoritesList(data);
+        } else {
+          // Mark for deletion
+          addToPendingDelete(favoriteId);
+          if (starIcon) {
+            starIcon.classList.remove('text-yellow-500');
+            starIcon.classList.add('text-gray-400');
+            starIcon.style.fontVariationSettings = '';
+          }
+        }
+      } else if (favoriteItem) {
+        const favoriteId = favoriteItem.dataset.favoriteId;
+        const favorites = getFavorites();
+        const favorite = favorites.find(f => f.id === favoriteId);
+        if (favorite) {
+          const selects = isMobile()
+            ? { semester: semesterSelectMobile, faculty: facultySelectMobile, course: courseSelectMobile }
+            : { semester: semesterSelect, faculty: facultySelect, course: courseSelect };
+          loadFavorite(favorite, selects.semester, selects.faculty, selects.course, data, currentWeekStart, searchQuery);
+
+          // Sync selects between desktop and mobile
+          if (isMobile()) {
+            syncSelects(semesterSelectMobile, semesterSelect);
+            syncSelects(facultySelectMobile, facultySelect);
+            syncSelects(courseSelectMobile, courseSelect);
+          } else {
+            syncSelects(semesterSelect, semesterSelectMobile);
+            syncSelects(facultySelect, facultySelectMobile);
+            syncSelects(courseSelect, courseSelectMobile);
+          }
+
+          // Close panels
+          document.getElementById('desktopFavoritesDisplay')?.classList.add('hidden');
+          document.getElementById('mobileFavoritesDisplay')?.classList.add('hidden');
+        }
+      }
+    });
 
     // Mobile event listeners
     if (semesterSelectMobile) {
@@ -894,6 +1694,7 @@ async function init() {
         syncSelects(facultySelectMobile, facultySelect);
         syncSelects(courseSelectMobile, courseSelect);
         saveSelection();
+        updateCurrentFavoriteLabel(data, semesterSelectMobile, facultySelectMobile, courseSelectMobile, currentFavoriteLabelMobile, addToFavoritesMobilePanel);
         renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
       });
     }
@@ -904,6 +1705,7 @@ async function init() {
         syncSelects(facultySelectMobile, facultySelect);
         syncSelects(courseSelectMobile, courseSelect);
         saveSelection();
+        updateCurrentFavoriteLabel(data, semesterSelectMobile, facultySelectMobile, courseSelectMobile, currentFavoriteLabelMobile, addToFavoritesMobilePanel);
         renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
       });
     }
@@ -913,6 +1715,7 @@ async function init() {
         activeSource = courseSelectMobile.value;
         syncSelects(courseSelectMobile, courseSelect);
         saveSelection();
+        updateCurrentFavoriteLabel(data, semesterSelectMobile, facultySelectMobile, courseSelectMobile, currentFavoriteLabelMobile, addToFavoritesMobilePanel);
         renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
       });
     }
@@ -967,8 +1770,19 @@ async function init() {
     if (toggleButtonMobile) {
       toggleButtonMobile.addEventListener('click', () => {
         const mobileConfigPanel = document.getElementById('mobileConfigPanel');
+        const icon = toggleButtonMobile.querySelector('.toggle-icon');
+        const isCollapsed = mobileConfigPanel.classList.contains('collapsed');
+        
         if (mobileConfigPanel) {
-          mobileConfigPanel.classList.toggle('collapsed');
+          if (isCollapsed) {
+            mobileConfigPanel.classList.remove('collapsed');
+            toggleButtonMobile.setAttribute('aria-expanded', 'true');
+            if (icon) icon.textContent = 'expand_less';
+          } else {
+            mobileConfigPanel.classList.add('collapsed');
+            toggleButtonMobile.setAttribute('aria-expanded', 'false');
+            if (icon) icon.textContent = 'expand_more';
+          }
         }
       });
     }
@@ -997,8 +1811,36 @@ async function init() {
     
     activeSource = (courseSelect && courseSelect.value) || (courseSelectMobile && courseSelectMobile.value) || activeSource;
 
+    // Check if user visited today and set animation flag
+    shouldAnimateProgress = !hasVisitedToday();
+    if (!hasVisitedToday()) {
+      markDailyVisit();
+    }
+
     filterCollapsed = getInitialFilterCollapsed();
     updateFilterState(filterCollapsed);
+
+    // Process pending delete on page load
+    processPendingDelete(data);
+
+    // Initialize favorites list
+    renderFavoritesList(data);
+
+    // Initialize current favorite labels
+    updateCurrentFavoriteLabel(data, semesterSelect, facultySelect, courseSelect, currentFavoriteLabelDesktop, addToFavoritesDesktopPanel);
+    updateCurrentFavoriteLabel(data, semesterSelectMobile, facultySelectMobile, courseSelectMobile, currentFavoriteLabelMobile, addToFavoritesMobilePanel);
+    
+    // Initialize mobile filter panel state
+    const mobileConfigPanel = document.getElementById('mobileConfigPanel');
+    if (mobileConfigPanel && filterCollapsed) {
+      mobileConfigPanel.classList.add('collapsed');
+      if (toggleButtonMobile) {
+        toggleButtonMobile.setAttribute('aria-expanded', 'false');
+        const icon = toggleButtonMobile.querySelector('.toggle-icon');
+        if (icon) icon.textContent = 'expand_more';
+      }
+    }
+
     renderSchedule(data, activeSource, currentWeekStart, searchQuery, true);
     
     // Handle window resize to update layout
