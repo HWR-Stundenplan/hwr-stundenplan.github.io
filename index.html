@@ -30,12 +30,12 @@
     </div>
 
     <!-- Mobile Header -->
-    <header class="md:hidden fixed top-0 right-0 left-0 z-40 flex justify-between items-center px-6 h-20 bg-white/70 backdrop-blur-md border-b border-gray-200 shadow-sm">
+    <header class="md:hidden fixed top-0 right-0 left-0 z-50 flex justify-between items-center px-6 h-16 bg-white/60 backdrop-blur-xl border-b border-white/20">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-[#002551] rounded-lg flex items-center justify-center text-white">
-          <span class="material-symbols-outlined text-2xl">school</span>
+        <div class="w-10 h-10 bg-white/80 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/50">
+          <img src="logo.png" alt="Logo" class="w-7 h-7 object-contain">
         </div>
-        <span class="text-2xl font-bold text-[#002551] tracking-tight">Campus Navigator</span>
+        <span class="text-xl font-bold text-[#002551] tracking-tight">Kursübersicht</span>
       </div>
     </header>
 
@@ -81,15 +81,76 @@
             <div class="grid gap-4 md:grid-cols-3">
               <label class="block">
                 <span class="mb-2 block text-sm font-medium text-slate-700">Semester</span>
-                <select id="semesterSelect" class="select-modern"></select>
+                <div class="schanzen-dropdown" data-dropdown="semester">
+                  <div class="schanzen-dropdown-container">
+                    <span class="schanzen-dropdown-value">Bitte wählen...</span>
+                    <div class="schanzen-overlay">
+                      <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
+                        <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
+                        <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                      </svg>
+                      <div class="schanzen-icon-surface">
+                        <svg viewBox="0 0 327 64" preserveAspectRatio="none">
+                          <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
+                        </svg>
+                      </div>
+                      <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
+                    </div>
+                  </div>
+                  <div class="schanzen-dropdown-menu">
+                    <div class="schanzen-dropdown-options" id="semesterOptions"></div>
+                  </div>
+                  <select id="semesterSelect" class="schanzen-hidden-select"></select>
+                </div>
               </label>
               <label class="block">
                 <span class="mb-2 block text-sm font-medium text-slate-700">Fachbereich</span>
-                <select id="facultySelect" class="select-modern"></select>
+                <div class="schanzen-dropdown" data-dropdown="faculty">
+                  <div class="schanzen-dropdown-container">
+                    <span class="schanzen-dropdown-value">Bitte wählen...</span>
+                    <div class="schanzen-overlay">
+                      <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
+                        <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
+                        <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                      </svg>
+                      <div class="schanzen-icon-surface">
+                        <svg viewBox="0 0 327 64" preserveAspectRatio="none">
+                          <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
+                        </svg>
+                      </div>
+                      <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
+                    </div>
+                  </div>
+                  <div class="schanzen-dropdown-menu">
+                    <div class="schanzen-dropdown-options" id="facultyOptions"></div>
+                  </div>
+                  <select id="facultySelect" class="schanzen-hidden-select"></select>
+                </div>
               </label>
               <label class="block">
                 <span class="mb-2 block text-sm font-medium text-slate-700">Kursgruppe</span>
-                <select id="courseSelect" class="select-modern"></select>
+                <div class="schanzen-dropdown" data-dropdown="course">
+                  <div class="schanzen-dropdown-container">
+                    <span class="schanzen-dropdown-value">Bitte wählen...</span>
+                    <div class="schanzen-overlay">
+                     <svg viewBox="0 0 327 64" preserveAspectRatio="none">
+  <path class="surface-path" 
+        d="M 0 60 C 100 60, 150 5, 327 5 L 327 64 L 0 64 Z" 
+        fill="#ffffff"/>
+</svg>
+                      <div class="schanzen-icon-surface">
+                        <svg viewBox="0 0 327 64" preserveAspectRatio="none">
+                          <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
+                        </svg>
+                      </div>
+                      <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
+                    </div>
+                  </div>
+                  <div class="schanzen-dropdown-menu">
+                    <div class="schanzen-dropdown-options" id="courseOptions"></div>
+                  </div>
+                  <select id="courseSelect" class="schanzen-hidden-select"></select>
+                </div>
               </label>
             </div>
           </div>
@@ -148,10 +209,10 @@
     </main>
 
     <!-- Mobile Main -->
-    <main class="md:hidden pt-24 pb-10 px-4 min-h-screen max-w-md mx-auto">
+    <main class="md:hidden pt-20 pb-10 px-4 min-h-screen max-w-md mx-auto bg-slate-50">
       
       <!-- Filter Toggle Button (positioned outside collapsible content) -->
-      <div id="mobileFilterButtonContainer" class="mb-4">
+      <div id="mobileFilterButtonContainer" class="mb-6">
         <button id="toggleFilterButtonMobile" class="filter-toggle-mobile w-full flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50" type="button" aria-expanded="true">
           <span class="material-symbols-outlined toggle-icon">expand_more</span> Filter
         </button>
@@ -202,15 +263,75 @@
           <div class="grid gap-4">
             <label class="block">
               <span class="mb-2 block text-xs font-medium text-gray-700">Semester</span>
-              <select id="semesterSelectMobile" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[#002551] focus:outline-none focus:ring-1 focus:ring-[#002551]"></select>
+              <div class="schanzen-dropdown" data-dropdown="semester-mobile">
+                <div class="schanzen-dropdown-container">
+                  <span class="schanzen-dropdown-value">Bitte wählen...</span>
+                  <div class="schanzen-overlay">
+                    <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
+                      <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
+                      <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                    </svg>
+                    <div class="schanzen-icon-surface">
+                      <svg viewBox="0 0 327 64" preserveAspectRatio="none">
+                        <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
+                      </svg>
+                    </div>
+                    <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
+                  </div>
+                </div>
+                <div class="schanzen-dropdown-menu">
+                  <div class="schanzen-dropdown-options" id="semesterOptionsMobile"></div>
+                </div>
+                <select id="semesterSelectMobile" class="schanzen-hidden-select"></select>
+              </div>
             </label>
             <label class="block">
               <span class="mb-2 block text-xs font-medium text-gray-700">Fachbereich</span>
-              <select id="facultySelectMobile" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[#002551] focus:outline-none focus:ring-1 focus:ring-[#002551]"></select>
+              <div class="schanzen-dropdown" data-dropdown="faculty-mobile">
+                <div class="schanzen-dropdown-container">
+                  <span class="schanzen-dropdown-value">Bitte wählen...</span>
+                  <div class="schanzen-overlay">
+                    <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
+                      <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
+                      <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                    </svg>
+                    <div class="schanzen-icon-surface">
+                      <svg viewBox="0 0 327 64" preserveAspectRatio="none">
+                        <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
+                      </svg>
+                    </div>
+                    <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
+                  </div>
+                </div>
+                <div class="schanzen-dropdown-menu">
+                  <div class="schanzen-dropdown-options" id="facultyOptionsMobile"></div>
+                </div>
+                <select id="facultySelectMobile" class="schanzen-hidden-select"></select>
+              </div>
             </label>
             <label class="block">
               <span class="mb-2 block text-xs font-medium text-gray-700">Kursgruppe</span>
-              <select id="courseSelectMobile" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[#002551] focus:outline-none focus:ring-1 focus:ring-[#002551]"></select>
+              <div class="schanzen-dropdown" data-dropdown="course-mobile">
+                <div class="schanzen-dropdown-container">
+                  <span class="schanzen-dropdown-value">Bitte wählen...</span>
+                  <div class="schanzen-overlay">
+                    <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
+                      <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
+                      <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                    </svg>
+                    <div class="schanzen-icon-surface">
+                      <svg viewBox="0 0 327 64" preserveAspectRatio="none">
+                        <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
+                      </svg>
+                    </div>
+                    <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
+                  </div>
+                </div>
+                <div class="schanzen-dropdown-menu">
+                  <div class="schanzen-dropdown-options" id="courseOptionsMobile"></div>
+                </div>
+                <select id="courseSelectMobile" class="schanzen-hidden-select"></select>
+              </div>
             </label>
           </div>
         </div>
@@ -234,7 +355,7 @@
       </div>
 
       <!-- Search -->
-      <div class="mb-6 relative">
+      <div id="searchContainerMobile" class="mb-6 relative">
         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
         <input id="searchInputMobile" type="text" placeholder="Nach Dozent, Modul oder Raum suchen..." class="w-full rounded-lg border border-gray-300 bg-white pl-10 pr-10 py-3 text-sm text-gray-900 focus:border-[#002551] focus:outline-none focus:ring-1 focus:ring-[#002551]">
         <button id="clearSearchMobile" class="absolute right-3 top-1/2 -translate-y-1/2 hidden rounded-lg p-1 text-gray-400 hover:bg-gray-100">

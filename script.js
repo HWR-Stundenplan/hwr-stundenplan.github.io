@@ -480,13 +480,14 @@ function renderDesktopSchedule(grouped, weekDays, isInitialLoad) {
       const e = new Date(ev.end);
       const top = ((s.getHours() + s.getMinutes() / 60) - minHour) / totalHours * dayHeightPx;
       const height = Math.max(40, ((e.getTime() - s.getTime()) / (1000 * 60 * 60)) * dayHeightPx / totalHours);
-      const location = ev.location ? `<div class="event-item-meta"><span class="material-symbols-outlined" style="font-size: 0.9rem;">location_on</span> ${ev.location}</div>` : '';
-      const teacherText = ev.teacher || extractTeacherFromDescription(ev.rawDescription || '');
-      const teacher = teacherText ? `<div class="event-item-meta"><span class="material-symbols-outlined" style="font-size: 0.9rem;">person</span> ${formatTeacherName(teacherText)}</div>` : '';
       const notes = `${ev.rawDescription || ''} ${ev.title || ''}`.toLowerCase();
       const isExam = /klausur(?!\s*vorbereitung)/.test(notes);
       const isOnline = !isExam && (/online/.test(notes) || ev.online);
-      const typeClass = isExam ? ' exam' : isOnline ? ' online' : '';
+      const isAsync = !isExam && !isOnline && (/asynchron/.test(notes) || /asynchrone lehre/.test(notes));
+      const location = ev.location ? `<div class="event-item-meta"><span class="material-symbols-outlined" style="font-size: 0.9rem;">location_on</span> ${ev.location}${isAsync ? ' <span style="color: #7c3aed;">(asynchron)</span>' : ''}</div>` : '';
+      const teacherText = ev.teacher || extractTeacherFromDescription(ev.rawDescription || '');
+      const teacher = teacherText ? `<div class="event-item-meta"><span class="material-symbols-outlined" style="font-size: 0.9rem;">person</span> ${formatTeacherName(teacherText)}</div>` : '';
+      const typeClass = isExam ? ' exam' : isOnline ? ' online' : isAsync ? ' async' : '';
       let typeLabel = 'Vorlesung';
       let pillColorClass = 'pill-blue';
       if (isExam) {
@@ -495,6 +496,9 @@ function renderDesktopSchedule(grouped, weekDays, isInitialLoad) {
       } else if (isOnline) {
         typeLabel = 'Online-Vorlesung';
         pillColorClass = 'pill-green';
+      } else if (isAsync) {
+        typeLabel = 'Asynchrone Lehre';
+        pillColorClass = 'pill-purple';
       }
       const pillTag = `<div class="pill ${pillColorClass}">${typeLabel}</div>`;
       return `<div class="event-item${typeClass}" style="top:${top}px;height:${height}px;">${pillTag}<div class="event-item-time">${formatTime(ev.start)} – ${formatTime(ev.end)}</div><div class="event-item-title">${stripTitlePrefix(ev.title)}</div>${location}${teacher}</div>`;
@@ -529,10 +533,12 @@ function renderMobileSchedule(grouped, weekDays, isInitialLoad) {
   const now = new Date();
   const currentDayOfWeek = now.getDay();
   const isWeekend = currentDayOfWeek === 0 || currentDayOfWeek === 6;
+  const eventsForToday = (grouped[todayKey] || []).slice().sort((a, b) => new Date(a.start) - new Date(b.start));
+  const hasEventsToday = eventsForToday.length > 0;
 
-  // Add weekend progress display if it's weekend and showProgressLabel is enabled
+  // Add weekend progress display if it's weekend, showProgressLabel is enabled, and no events today
   let weekendProgressHtml = '';
-  if (isWeekend && showProgressLabel) {
+  if (isWeekend && showProgressLabel && !hasEventsToday) {
     const animateClass = shouldAnimateProgress ? 'animate-progress' : '';
     const initialWidth = shouldAnimateProgress ? '0%' : '100%';
     const initialPercent = shouldAnimateProgress ? '0%' : '100%';
@@ -558,12 +564,13 @@ function renderMobileSchedule(grouped, weekDays, isInitialLoad) {
     const eventsHtml = merged.map((ev) => {
       const s = new Date(ev.start);
       const e = new Date(ev.end);
-      const location = ev.location ? `<div class="flex items-center gap-2 text-gray-500"><span class="material-symbols-outlined text-[18px]">meeting_room</span><span class="text-sm">${ev.location}</span></div>` : '';
-      const teacherText = ev.teacher || extractTeacherFromDescription(ev.rawDescription || '');
-      const teacher = teacherText ? `<div class="flex items-center gap-2 text-gray-500 col-span-2"><span class="material-symbols-outlined text-[18px]">person</span><span class="text-sm">${formatTeacherName(teacherText)}</span></div>` : '';
       const notes = `${ev.rawDescription || ''} ${ev.title || ''}`.toLowerCase();
       const isExam = /klausur(?!\s*vorbereitung)/.test(notes);
       const isOnline = !isExam && (/online/.test(notes) || ev.online);
+      const isAsync = !isExam && !isOnline && (/asynchron/.test(notes) || /asynchrone lehre/.test(notes));
+      const location = ev.location ? `<div class="flex items-center gap-2 text-gray-500"><span class="material-symbols-outlined text-[18px]">meeting_room</span><span class="text-sm">${ev.location}${isAsync ? ' <span style="color: #7c3aed;">(asynchron)</span>' : ''}</span></div>` : '';
+      const teacherText = ev.teacher || extractTeacherFromDescription(ev.rawDescription || '');
+      const teacher = teacherText ? `<div class="flex items-center gap-2 text-gray-500 col-span-2"><span class="material-symbols-outlined text-[18px]">person</span><span class="text-sm">${formatTeacherName(teacherText)}</span></div>` : '';
       let typeLabel = 'V';
       let typeColorClass = 'bg-blue-50 text-[#002551]';
       if (isExam) {
@@ -572,12 +579,16 @@ function renderMobileSchedule(grouped, weekDays, isInitialLoad) {
       } else if (isOnline) {
         typeLabel = 'O';
         typeColorClass = 'bg-green-50 text-green-700';
+      } else if (isAsync) {
+        typeLabel = 'A';
+        typeColorClass = 'bg-purple-50 text-purple-700';
       }
 
-      const borderColor = isExam ? 'border-red-600' : isOnline ? 'border-green-600' : 'border-[#003a79]';
+      const borderColor = isExam ? 'border-red-600' : isOnline ? 'border-green-600' : isAsync ? 'border-purple-600' : 'border-[#003a79]';
+      const typeClass = isExam ? ' exam' : isOnline ? ' online' : isAsync ? ' async' : '';
 
       return `
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex transition-all active:scale-[0.98] event-card">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex transition-all active:scale-[0.98] event-card${typeClass}">
           <div class="w-1 ${borderColor}"></div>
           <div class="p-4 flex-1">
             <div class="flex justify-between items-start mb-2">
@@ -638,7 +649,7 @@ function renderMobileSchedule(grouped, weekDays, isInitialLoad) {
           const endTimeStr = new Date(dayEnd).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
           progressText = `Jetzt: ${currentTimeStr} | Tag: ${startTimeStr} - ${endTimeStr}`;
         }
-      } else if (isWeekend) {
+      } else if (isWeekend && !hasEventsToday) {
         progressPercentValue = 100;
         progressText = 'Wochenende - 100% abgeschlossen';
       }
@@ -683,7 +694,7 @@ function renderMobileSchedule(grouped, weekDays, isInitialLoad) {
   }
 
   // Animate weekend progress if needed
-  if (isWeekend && showProgressLabel && shouldAnimateProgress) {
+  if (isWeekend && showProgressLabel && shouldAnimateProgress && !hasEventsToday) {
     setTimeout(() => {
       const progressBar = document.querySelector('.weekend-progress-bar');
       const progressPercent = document.querySelector('.weekend-progress-percent');
@@ -710,7 +721,7 @@ function renderMobileSchedule(grouped, weekDays, isInitialLoad) {
   }
 
   // Animate day progress if needed
-  if (showProgressLabel && shouldAnimateProgress && !isWeekend) {
+  if (showProgressLabel && shouldAnimateProgress && (!isWeekend || hasEventsToday)) {
     setTimeout(() => {
       weekDays.forEach((day, index) => {
         const dayKey = getLocalDateKey(day);
@@ -889,8 +900,9 @@ function updateDesktopProgressDisplay(data, activeSource, currentWeekStart) {
 
   const currentDayOfWeek = now.getDay();
   const isWeekend = currentDayOfWeek === 0 || currentDayOfWeek === 6;
+  const hasEventsToday = eventsForDay.length > 0;
 
-  if (isWeekend) {
+  if (isWeekend && !hasEventsToday) {
     progressPercent.textContent = '0%';
     progressTime.textContent = 'Wochenende - 100% abgeschlossen';
     if (shouldAnimateProgress) {
@@ -1198,8 +1210,6 @@ function addCurrentToFavorites(data, semesterSelect, facultySelect, courseSelect
   if (currentFavoriteLabelMobile && addToFavoritesMobilePanel) {
     updateCurrentFavoriteLabel(data, semesterSelectMobile, facultySelectMobile, courseSelectMobile, currentFavoriteLabelMobile, addToFavoritesMobilePanel);
   }
-
-  alert(`"${abbreviation}" wurde zu den Favoriten hinzugefügt.`);
 }
 
 function deleteFavorite(favoriteId, data) {
@@ -1209,18 +1219,111 @@ function deleteFavorite(favoriteId, data) {
   renderFavoritesList(data);
 }
 
-function loadFavorite(favorite, semesterSelect, facultySelect, courseSelect, data, currentWeekStart, searchQuery) {
-  if (semesterSelect) semesterSelect.value = favorite.semester;
-  if (facultySelect) facultySelect.value = favorite.faculty;
-  if (courseSelect) courseSelect.value = favorite.courseId;
+function populateFaculties(semesterSelect, facultySelect, data) {
+  if (!semesterSelect || !facultySelect || !data) return;
+  const sem = semesterSelect.value;
+  console.log('populateFaculties called with semester:', sem);
+  const schedules = data.schedules || [];
+  const faculties = Array.from(new Set(schedules.filter((schedule) => schedule.semester === sem).map((schedule) => schedule.faculty).filter(Boolean))).sort();
+  console.log('Faculties found:', faculties);
+  facultySelect.innerHTML = faculties.length ? faculties.map((faculty) => `<option value="${faculty}">${faculty}</option>`).join('') : '<option value="">Keine Fachrichtung verfügbar</option>';
+  console.log('Faculty select innerHTML set');
+}
+
+function populateCourses(courseSelect, semesterSelect, facultySelect, data) {
+  if (!courseSelect || !data) return;
+  const sem = semesterSelect ? semesterSelect.value : '';
+  const fac = facultySelect ? facultySelect.value : '';
+  console.log('populateCourses called with semester:', sem, 'faculty:', fac);
+  const schedules = data.schedules || [];
+  const courses = schedules.filter((schedule) => schedule.semester === sem && schedule.faculty === fac);
+  console.log('Courses found:', courses.map(c => c.id));
+  courseSelect.innerHTML = courses.length ? courses.map((course) => `<option value="${course.id}">${formatCourseLabel(course.title)}</option>`).join('') : '<option value="">Kein Kurs verfügbar</option>';
+  console.log('Course select innerHTML set');
+}
+
+function loadFavorite(favorite, data, currentWeekStart, searchQuery) {
+  console.log('loadFavorite called with:', favorite);
   
-  saveSelection();
-  renderSchedule(data, favorite.courseId, currentWeekStart, searchQuery, false);
+  const isMobileView = isMobile();
+  const semesterSelect = isMobileView 
+    ? document.getElementById('semesterSelectMobile') 
+    : document.getElementById('semesterSelect');
+  const facultySelect = isMobileView 
+    ? document.getElementById('facultySelectMobile') 
+    : document.getElementById('facultySelect');
+  const courseSelect = isMobileView 
+    ? document.getElementById('courseSelectMobile') 
+    : document.getElementById('courseSelect');
+  
+  console.log('Select elements found:', { semesterSelect: !!semesterSelect, facultySelect: !!facultySelect, courseSelect: !!courseSelect });
+  
+  if (!semesterSelect || !facultySelect || !courseSelect) {
+    console.error('Missing select elements in loadFavorite');
+    return favorite.courseId;
+  }
+
+  console.log('Setting semester to:', favorite.semester);
+  // Set semester
+  semesterSelect.value = favorite.semester;
+  console.log('Semester set to:', semesterSelect.value);
+  
+  console.log('Populating faculties...');
+  // Populate and set faculty
+  populateFaculties(semesterSelect, facultySelect, data);
+  
+  // Use requestAnimationFrame to ensure DOM is updated before setting value
+  requestAnimationFrame(() => {
+    console.log('Setting faculty to:', favorite.faculty);
+    facultySelect.value = favorite.faculty;
+    console.log('Faculty set to:', facultySelect.value);
+    
+    console.log('Populating courses...');
+    // Populate and set course
+    populateCourses(courseSelect, semesterSelect, facultySelect, data);
+    
+    // Use another requestAnimationFrame to ensure DOM is updated before setting value
+    requestAnimationFrame(() => {
+      console.log('Setting course to:', favorite.courseId);
+      courseSelect.value = favorite.courseId;
+      console.log('Course set to:', courseSelect.value);
+
+      // Set to current week (same logic as "Heute" button)
+      const now = new Date();
+      const currentDayIndex = now.getDay();
+      let newWeekStart = getMonday(now);
+      console.log('Setting week to current week:', newWeekStart);
+
+      saveSelection();
+      renderSchedule(data, favorite.courseId, newWeekStart, searchQuery, false);
+
+      // Check if we need to switch to next week (after rendering to check for Saturday events)
+      setTimeout(() => {
+        const saturdaySection = document.getElementById('saturday');
+        const hasSaturdayEvents = saturdaySection !== null;
+        
+        if (currentDayIndex === 0) {
+          // Sunday: always go to next week
+          newWeekStart = addDays(newWeekStart, 7);
+          renderSchedule(data, favorite.courseId, newWeekStart, searchQuery, false);
+        } else if (currentDayIndex === 6 && !hasSaturdayEvents) {
+          // Saturday without events: go to next week
+          newWeekStart = addDays(newWeekStart, 7);
+          renderSchedule(data, favorite.courseId, newWeekStart, searchQuery, false);
+        }
+        
+        // Scroll to current day on mobile
+        if (isMobileView) {
+          scrollToCurrentDay();
+        }
+      }, 100);
+    });
+  });
+  
+  return favorite.courseId;
 }
 
 function renderFavoritesList(data) {
-  const favoritesList = document.getElementById('favoritesList');
-  const favoritesListMobile = document.getElementById('favoritesListMobile');
   const favoritesListDesktopPanel = document.getElementById('favoritesListDesktopPanel');
   const favoritesListMobilePanel = document.getElementById('favoritesListMobilePanel');
   const favorites = getFavorites();
@@ -1251,8 +1354,6 @@ function renderFavoritesList(data) {
     }).join('');
   };
 
-  renderList(favoritesList);
-  renderList(favoritesListMobile);
   renderList(favoritesListDesktopPanel);
   renderList(favoritesListMobilePanel);
 }
@@ -1331,21 +1432,167 @@ async function init() {
     if (semesterSelectMobile) {
       semesterSelectMobile.innerHTML = semesterOptions.map((semester, index) => `<option value="${semester}">Semester ${index + 1}</option>`).join('');
     }
+    
+    // Populate faculty and course selects BEFORE initializing dropdowns
+    if (semesterSelect) populateFaculties(semesterSelect, facultySelect, data);
+    if (semesterSelectMobile) populateFaculties(semesterSelectMobile, facultySelectMobile, data);
+    
+    if (courseSelect) populateCourses(courseSelect, semesterSelect, facultySelect, data);
+    if (courseSelectMobile) populateCourses(courseSelectMobile, semesterSelectMobile, facultySelectMobile, data);
+    
+    // Initialize Schanzen dropdowns AFTER populating selects
 
-    function populateFaculties(semesterSelect, facultySelect) {
-      if (!semesterSelect || !facultySelect) return;
-      const sem = semesterSelect.value;
-      const faculties = Array.from(new Set(schedules.filter((schedule) => schedule.semester === sem).map((schedule) => schedule.faculty).filter(Boolean))).sort();
-      facultySelect.innerHTML = faculties.length ? faculties.map((faculty) => `<option value="${faculty}">${faculty}</option>`).join('') : '<option value="">Keine Fachrichtung verfügbar</option>';
+    // Initialize Schanzen dropdowns - simplified version
+    function initializeSchanzenDropdown(dropdownId, selectId, optionsId) {
+      const dropdown = document.querySelector(`[data-dropdown="${dropdownId}"]`);
+      const select = document.getElementById(selectId);
+      const optionsContainer = document.getElementById(optionsId);
+      const container = dropdown?.querySelector('.schanzen-dropdown-container');
+      const valueDisplay = dropdown?.querySelector('.schanzen-dropdown-value');
+      const dropdownMenu = dropdown?.querySelector('.schanzen-dropdown-menu');
+
+      if (!dropdown || !select || !optionsContainer || !container || !valueDisplay || !dropdownMenu) {
+        console.warn('[Dropdown] Missing elements for:', dropdownId);
+        return;
+      }
+
+      // Update options when select changes
+      function updateOptions() {
+        const options = Array.from(select.options).map(opt => ({
+          value: opt.value,
+          text: opt.textContent,
+          selected: opt.selected
+        }));
+
+        optionsContainer.innerHTML = options.map(opt => `
+          <button class="schanzen-dropdown-option ${opt.selected ? 'selected' : ''}" data-value="${opt.value}">
+            ${opt.text}
+          </button>
+        `).join('');
+
+        // Update display value
+        const selectedOption = select.options[select.selectedIndex];
+        valueDisplay.textContent = selectedOption ? selectedOption.textContent : 'Bitte wählen...';
+      }
+
+      // Toggle dropdown
+      function toggleDropdown(e) {
+        e.preventDefault();
+        console.log('[Dropdown] Toggle clicked, dropdownId:', dropdownId);
+        e.stopPropagation();
+        const isOpen = dropdown.classList.contains('open');
+        console.log('[Dropdown] Current isOpen state:', isOpen);
+
+        // On mobile, close all other dropdowns before opening this one
+        const isMobile = window.innerWidth <= 768 || dropdownId.includes('-mobile');
+        if (isMobile) {
+          document.querySelectorAll('.schanzen-dropdown.open').forEach(d => {
+            if (d !== dropdown) {
+              d.classList.remove('open');
+              const otherMenu = d.querySelector('.schanzen-dropdown-menu');
+              if (otherMenu) {
+                otherMenu.style.display = 'none';
+                otherMenu.style.opacity = '0';
+                otherMenu.style.pointerEvents = 'none';
+              }
+            }
+          });
+        }
+
+        if (isOpen) {
+          dropdown.classList.remove('open');
+          if (dropdownMenu) {
+            dropdownMenu.style.display = 'none';
+            dropdownMenu.style.opacity = '0';
+            dropdownMenu.style.pointerEvents = 'none';
+          }
+          console.log('[Dropdown] Closed dropdown');
+        } else {
+          dropdown.classList.add('open');
+          if (dropdownMenu) {
+            dropdownMenu.style.display = 'block';
+            dropdownMenu.style.opacity = '1';
+            dropdownMenu.style.pointerEvents = 'auto';
+            dropdownMenu.style.overflow = 'visible';
+            dropdownMenu.style.maxHeight = 'none';
+          }
+          if (optionsContainer) {
+            optionsContainer.style.overflow = 'visible';
+            optionsContainer.style.maxHeight = 'none';
+          }
+          console.log('[Dropdown] Opened dropdown, classes:', dropdown.className);
+        }
+      }
+
+      // Handle option selection
+      function handleOptionClick(e) {
+        const optionBtn = e.target.closest('.schanzen-dropdown-option');
+        if (!optionBtn) return;
+
+        e.stopPropagation();
+        const value = optionBtn.dataset.value;
+        select.value = value;
+
+        // Update selected state
+        optionsContainer.querySelectorAll('.schanzen-dropdown-option').forEach(btn => {
+          btn.classList.remove('selected');
+        });
+        optionBtn.classList.add('selected');
+
+        // Update display
+        valueDisplay.textContent = optionBtn.textContent;
+
+        // Close dropdown
+        dropdown.classList.remove('open');
+        if (dropdownMenu) {
+          dropdownMenu.style.display = 'none';
+          dropdownMenu.style.opacity = '0';
+          dropdownMenu.style.pointerEvents = 'none';
+        }
+
+        // Trigger change event on select
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      // Close dropdown when clicking outside
+      function handleOutsideClick(e) {
+        if (!dropdown.contains(e.target)) {
+          dropdown.classList.remove('open');
+          if (dropdownMenu) {
+            dropdownMenu.style.display = 'none';
+            dropdownMenu.style.opacity = '0';
+            dropdownMenu.style.pointerEvents = 'none';
+          }
+        }
+      }
+
+      // Set up event listeners (only once)
+      if (!container.hasAttribute('data-dropdown-initialized')) {
+        container.setAttribute('data-dropdown-initialized', 'true');
+        dropdown.addEventListener('click', toggleDropdown);
+        optionsContainer.addEventListener('click', handleOptionClick);
+        document.addEventListener('click', handleOutsideClick);
+      }
+
+      // Initial population
+      updateOptions();
+
+      // Listen for select changes to update options
+      select.addEventListener('change', updateOptions);
+
+      // Return update function for external use
+      return updateOptions;
     }
 
-    function populateCourses(courseSelect, semesterSelect, facultySelect) {
-      if (!courseSelect) return;
-      const sem = semesterSelect ? semesterSelect.value : '';
-      const fac = facultySelect ? facultySelect.value : '';
-      const courses = schedules.filter((schedule) => schedule.semester === sem && schedule.faculty === fac);
-      courseSelect.innerHTML = courses.length ? courses.map((course) => `<option value="${course.id}">${formatCourseLabel(course.title)}</option>`).join('') : '<option value="">Kein Kurs verfügbar</option>';
-    }
+    // Initialize desktop Schanzen dropdowns
+    const updateSemesterDropdown = initializeSchanzenDropdown('semester', 'semesterSelect', 'semesterOptions');
+    const updateFacultyDropdown = initializeSchanzenDropdown('faculty', 'facultySelect', 'facultyOptions');
+    const updateCourseDropdown = initializeSchanzenDropdown('course', 'courseSelect', 'courseOptions');
+
+    // Initialize mobile Schanzen dropdowns
+    const updateSemesterDropdownMobile = initializeSchanzenDropdown('semester-mobile', 'semesterSelectMobile', 'semesterOptionsMobile');
+    const updateFacultyDropdownMobile = initializeSchanzenDropdown('faculty-mobile', 'facultySelectMobile', 'facultyOptionsMobile');
+    const updateCourseDropdownMobile = initializeSchanzenDropdown('course-mobile', 'courseSelectMobile', 'courseOptionsMobile');
 
     function syncSelects(sourceSelect, targetSelect) {
       if (sourceSelect && targetSelect) {
@@ -1392,8 +1639,8 @@ async function init() {
     // Desktop event listeners
     if (semesterSelect) {
       semesterSelect.addEventListener('change', () => {
-        populateFaculties(semesterSelect, facultySelect);
-        populateCourses(courseSelect, semesterSelect, facultySelect);
+        populateFaculties(semesterSelect, facultySelect, data);
+        populateCourses(courseSelect, semesterSelect, facultySelect, data);
         syncSelects(semesterSelect, semesterSelectMobile);
         syncSelects(facultySelect, facultySelectMobile);
         syncSelects(courseSelect, courseSelectMobile);
@@ -1405,7 +1652,7 @@ async function init() {
 
     if (facultySelect) {
       facultySelect.addEventListener('change', () => {
-        populateCourses(courseSelect, semesterSelect, facultySelect);
+        populateCourses(courseSelect, semesterSelect, facultySelect, data);
         syncSelects(facultySelect, facultySelectMobile);
         syncSelects(courseSelect, courseSelectMobile);
         saveSelection();
@@ -1637,7 +1884,10 @@ async function init() {
     // Handle favorite item clicks and delete buttons
     document.addEventListener('click', (e) => {
       const deleteBtn = e.target.closest('.favorite-item-delete');
+      const favoriteItemName = e.target.closest('.favorite-item-name');
       const favoriteItem = e.target.closest('.favorite-item');
+
+      console.log('Click detected:', { deleteBtn: !!deleteBtn, favoriteItemName: !!favoriteItemName, favoriteItem: !!favoriteItem });
 
       if (deleteBtn) {
         e.stopPropagation();
@@ -1657,26 +1907,41 @@ async function init() {
             starIcon.style.fontVariationSettings = '';
           }
         }
-      } else if (favoriteItem) {
+      } else if (favoriteItemName || (favoriteItem && !deleteBtn)) {
+        e.stopPropagation();
         const favoriteId = favoriteItem.dataset.favoriteId;
+        console.log('Favorite item clicked, ID:', favoriteId);
         const favorites = getFavorites();
         const favorite = favorites.find(f => f.id === favoriteId);
+        console.log('Found favorite:', favorite);
         if (favorite) {
-          const selects = isMobile()
-            ? { semester: semesterSelectMobile, faculty: facultySelectMobile, course: courseSelectMobile }
-            : { semester: semesterSelect, faculty: facultySelect, course: courseSelect };
-          loadFavorite(favorite, selects.semester, selects.faculty, selects.course, data, currentWeekStart, searchQuery);
+          const newCourseId = loadFavorite(favorite, data, currentWeekStart, searchQuery);
+          activeSource = newCourseId;
 
           // Sync selects between desktop and mobile
-          if (isMobile()) {
-            syncSelects(semesterSelectMobile, semesterSelect);
-            syncSelects(facultySelectMobile, facultySelect);
-            syncSelects(courseSelectMobile, courseSelect);
-          } else {
-            syncSelects(semesterSelect, semesterSelectMobile);
-            syncSelects(facultySelect, facultySelectMobile);
-            syncSelects(courseSelect, courseSelectMobile);
-          }
+          const isMobileView = isMobile();
+          const semesterSelect = isMobileView 
+            ? document.getElementById('semesterSelectMobile') 
+            : document.getElementById('semesterSelect');
+          const facultySelect = isMobileView 
+            ? document.getElementById('facultySelectMobile') 
+            : document.getElementById('facultySelect');
+          const courseSelect = isMobileView 
+            ? document.getElementById('courseSelectMobile') 
+            : document.getElementById('courseSelect');
+          const semesterSelectOther = isMobileView 
+            ? document.getElementById('semesterSelect') 
+            : document.getElementById('semesterSelectMobile');
+          const facultySelectOther = isMobileView 
+            ? document.getElementById('facultySelect') 
+            : document.getElementById('facultySelectMobile');
+          const courseSelectOther = isMobileView 
+            ? document.getElementById('courseSelect') 
+            : document.getElementById('courseSelectMobile');
+
+          if (semesterSelect && semesterSelectOther) semesterSelectOther.value = semesterSelect.value;
+          if (facultySelect && facultySelectOther) facultySelectOther.value = facultySelect.value;
+          if (courseSelect && courseSelectOther) courseSelectOther.value = courseSelect.value;
 
           // Close panels
           document.getElementById('desktopFavoritesDisplay')?.classList.add('hidden');
@@ -1688,8 +1953,8 @@ async function init() {
     // Mobile event listeners
     if (semesterSelectMobile) {
       semesterSelectMobile.addEventListener('change', () => {
-        populateFaculties(semesterSelectMobile, facultySelectMobile);
-        populateCourses(courseSelectMobile, semesterSelectMobile, facultySelectMobile);
+        populateFaculties(semesterSelectMobile, facultySelectMobile, data);
+        populateCourses(courseSelectMobile, semesterSelectMobile, facultySelectMobile, data);
         syncSelects(semesterSelectMobile, semesterSelect);
         syncSelects(facultySelectMobile, facultySelect);
         syncSelects(courseSelectMobile, courseSelect);
@@ -1701,7 +1966,7 @@ async function init() {
 
     if (facultySelectMobile) {
       facultySelectMobile.addEventListener('change', () => {
-        populateCourses(courseSelectMobile, semesterSelectMobile, facultySelectMobile);
+        populateCourses(courseSelectMobile, semesterSelectMobile, facultySelectMobile, data);
         syncSelects(facultySelectMobile, facultySelect);
         syncSelects(courseSelectMobile, courseSelect);
         saveSelection();
@@ -1791,18 +2056,28 @@ async function init() {
     if (cached && semesterOptions.includes(cached.semester)) {
       if (semesterSelect) semesterSelect.value = cached.semester;
       if (semesterSelectMobile) semesterSelectMobile.value = cached.semester;
+      
+      // Repopulate faculties after setting cached semester
+      if (semesterSelect) populateFaculties(semesterSelect, facultySelect, data);
+      if (semesterSelectMobile) populateFaculties(semesterSelectMobile, facultySelectMobile, data);
     }
     
-    if (semesterSelect) populateFaculties(semesterSelect, facultySelect);
-    if (semesterSelectMobile) populateFaculties(semesterSelectMobile, facultySelectMobile);
+    // Update Schanzen dropdowns after populating faculties
+    if (updateFacultyDropdown) updateFacultyDropdown();
+    if (updateFacultyDropdownMobile) updateFacultyDropdownMobile();
     
     if (cached && cached.faculty) {
       if (facultySelect) facultySelect.value = cached.faculty;
       if (facultySelectMobile) facultySelectMobile.value = cached.faculty;
+      
+      // Repopulate courses after setting cached faculty
+      if (courseSelect) populateCourses(courseSelect, semesterSelect, facultySelect, data);
+      if (courseSelectMobile) populateCourses(courseSelectMobile, semesterSelectMobile, facultySelectMobile, data);
     }
     
-    if (courseSelect) populateCourses(courseSelect, semesterSelect, facultySelect);
-    if (courseSelectMobile) populateCourses(courseSelectMobile, semesterSelectMobile, facultySelectMobile);
+    // Update Schanzen dropdowns after populating courses
+    if (updateCourseDropdown) updateCourseDropdown();
+    if (updateCourseDropdownMobile) updateCourseDropdownMobile();
     
     if (cached && cached.courseId) {
       if (courseSelect) courseSelect.value = cached.courseId;

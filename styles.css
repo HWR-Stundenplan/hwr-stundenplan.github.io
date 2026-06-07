@@ -26,6 +26,7 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
 .event-item:hover { transform: translateY(-1px); box-shadow: 0 22px 45px rgba(15, 23, 42, 0.14); }
 .event-item.online { background: linear-gradient(180deg, #ecfdf5 0%, #f8fafc 100%); border-left-color: #34d399; border-color: #bbf7d0; }
 .event-item.exam { border-left-color: #ef4444; }
+.event-item.async { background: linear-gradient(180deg, #f5f3ff 0%, #f8fafc 100%); border-left-color: #a78bfa; border-color: #ddd6fe; }
 .event-item-time { color: #2563eb; font-size: 0.78rem; font-weight: 600; }
 .event-item-title { margin-top: 0.35rem; font-weight: 700; font-size: 0.92rem; line-height: 1.2; }
 .event-item-meta { margin-top: 0.4rem; font-size: 0.78rem; color: #475569; line-height: 1.4; font-family: 'Roboto Mono', monospace; display: flex; align-items: center; gap: 0.35rem; }
@@ -34,6 +35,7 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
 .pill-blue { border-color: #93c5fd; background: #eff6ff; color: #1d4ed8; }
 .pill-green { border-color: #86efac; background: #f0fdf4; color: #16a34a; }
 .pill-red { border-color: #fca5a5; background: #fef2f2; color: #dc2626; }
+.pill-purple { border-color: #c4b5fd; background: #f5f3ff; color: #7c3aed; }
 .select-modern { width: 100%; appearance: none; -webkit-appearance: none; -moz-appearance: none; border: 1px solid #d1d5db; border-radius: 1.5rem; background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2361728a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 1rem center/1.1rem; padding: 1rem 3rem 1rem 1.1rem; font-size: 0.95rem; color: #0f172a; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease; }
 .select-modern:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12); }
 .scrollbar-thin::-webkit-scrollbar { height: 10px; width: 10px; }
@@ -41,8 +43,8 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
 .filter-toggle { display: inline-flex; align-items: center; gap: 0.5rem; border-radius: 2rem; border: 1px solid #cbd5e1; background: #ffffff; padding: 0.8rem 1rem; font-size: 0.95rem; font-weight: 600; color: #0f172a; transition: background 0.2s ease, border-color 0.2s ease; }
 .filter-toggle:hover { background: #f1f5f9; border-color: #94a3b8; }
 .filter-toggle .toggle-icon { transition: transform 0.25s ease; }
-#configPanel { overflow: hidden; transition: box-shadow 0.2s ease; }
-#configContent { overflow: hidden; transition: max-height 0.35s ease, opacity 0.25s ease, transform 0.35s ease; max-height: 2000px; opacity: 1; transform: translateY(0); }
+#configPanel { overflow: visible !important; transition: box-shadow 0.2s ease; z-index: 1000; position: relative; }
+#configContent { overflow: visible !important; transition: max-height 0.35s ease, opacity 0.25s ease, transform 0.35s ease; max-height: none; opacity: 1; transform: translateY(0); position: relative; }
 #configPanel.collapsed #configContent { max-height: 0; opacity: 0; transform: translateY(-8px); }
 #configPanel.collapsed .toggle-icon { transform: rotate(-90deg); }
 .date-range-selector { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 999px; border: 1px solid #e2e8f0; background: #ffffff; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06); }
@@ -54,7 +56,7 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
 .date-range-text { font-size: 0.9rem; font-weight: 600; color: #0f172a; white-space: nowrap; }
 .week-badge { display: inline-flex; align-items: center; padding: 0.25rem 0.6rem; border-radius: 999px; background: #000080; color: #ffffff; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; }
 .search-bar-container { margin-bottom: 1rem; }
-.search-bar-container .relative { position: relative; }
+.search-bar-container .relative { position: relative; z-index: 100;}
 .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 1.25rem; pointer-events: none; }
 .search-input { width: 100%; padding: 0.85rem 3rem 0.85rem 3rem; border: 1px solid #d1d5db; border-radius: 1.5rem; font-size: 0.95rem; color: #0f172a; background: #ffffff; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); transition: border-color 0.2s ease, box-shadow 0.2s ease; }
 .search-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12); }
@@ -86,6 +88,9 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
   /* Mobile event card styles */
   .event-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
   .event-card:active { transform: scale(0.98); }
+  .event-card.online { background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%); }
+  .event-card.exam { background: linear-gradient(180deg, #fef2f2 0%, #ffffff 100%); }
+  .event-card.async { background: linear-gradient(180deg, #f5f3ff 0%, #ffffff 100%); }
   
   /* Mobile filter panel - improved visual design and animation */
   #mobileConfigPanel {
@@ -98,8 +103,9 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
     overflow-y: auto;
     max-height: none;
     opacity: 1;
-    transform: translateY(0);
     transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 99999;
+    isolation: isolate;
   }
   #mobileConfigPanel.collapsed {
     max-height: 0;
@@ -114,7 +120,7 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
   /* Mobile filter button - positioned independently */
   .filter-toggle-mobile {
     position: relative;
-    z-index: 46;
+    z-index: 10;
   }
   .filter-toggle-mobile .toggle-icon {
     transition: transform 0.25s ease;
@@ -214,6 +220,7 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
   background-color: #f8fafc;
   border: 1px solid #e2e8f0;
   transition: background-color 0.15s ease;
+  cursor: pointer;
 }
 
 .favorite-item:hover {
@@ -550,4 +557,303 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
 .weekend-progress-bar,
 [class^="day-progress-bar-"] {
   transition: width 0.08s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Schanzen-S-Design Dropdown Styles */
+.schanzen-dropdown {
+  position: relative;
+  width: 100%;
+  z-index: 10000 !important;
+  overflow: visible !important;
+  isolation: isolate;
+}
+
+/* Different z-index for each dropdown container */
+.schanzen-dropdown[data-dropdown="semester"],
+.schanzen-dropdown[data-dropdown="semester-mobile"] {
+  z-index: 30 !important;
+}
+
+.schanzen-dropdown[data-dropdown="faculty"],
+.schanzen-dropdown[data-dropdown="faculty-mobile"] {
+  z-index: 20 !important;
+}
+
+.schanzen-dropdown[data-dropdown="course"],
+.schanzen-dropdown[data-dropdown="course-mobile"] {
+  z-index: 10 !important;
+}
+
+/* Ensure label elements don't clip dropdowns */
+label.block {
+  overflow: visible !important;
+}
+
+/* Ensure grid containers don't clip dropdowns */
+.grid {
+  overflow: visible !important;
+  position: relative;
+}
+
+/* Ensure gap-4 containers don't clip dropdowns */
+.gap-4 {
+  overflow: visible !important;
+}
+
+/* Ensure space-y-4 containers don't clip dropdowns */
+.space-y-4 {
+  overflow: visible !important;
+}
+
+.schanzen-hidden-select {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
+.schanzen-dropdown-container {
+  position: relative;
+  width: 100%;
+  height: 52px;
+  background: linear-gradient(145deg, #f5f7fa, #e8eaf0);
+  border-radius: 1rem;
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.06),
+    inset -1px -1px 3px rgba(255, 255, 255, 0.8),
+    3px 4px 8px rgba(0, 0, 0, 0.1),
+    -1px -1px 4px rgba(255, 255, 255, 0.6),
+    0 0 15px rgba(100, 116, 139, 0.15);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+  overflow: hidden;
+  z-index: 10;
+
+}
+
+
+
+.schanzen-dropdown-container:hover {
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.08),
+    inset -1px -1px 3px rgba(255, 255, 255, 0.8),
+    4px 6px 12px rgba(0, 0, 0, 0.12),
+    -2px -2px 6px rgba(255, 255, 255, 0.6),
+    0 0 20px rgba(100, 116, 139, 0.2);
+}
+
+.schanzen-dropdown-value {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #334155;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 90px);
+}
+
+.schanzen-overlay {
+  position: absolute;
+  z-index: 10;
+  right: 0;
+  top: 0;
+  width: 80px;
+  height: 100%;
+  pointer-events: none;
+}
+
+.schanzen-svg {
+  position: absolute;
+  z-index: 5;
+  right: -20px;
+  top: 0;
+  width: 100px;
+  height: 100%;
+  display: block;
+}
+
+.schanzen-path {
+  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.08));
+}
+
+.schanzen-highlight {
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.6));
+}
+
+.schanzen-dropdown-icon {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.25rem;
+  color: #64748b;
+  z-index: 10;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.schanzen-icon-surface {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 115px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9;
+}
+
+.schanzen-icon-surface svg {
+  position: absolute;
+  right: -15px;
+  top: 0;
+  width: 360px;
+  height: 100%;
+  display: block;
+}
+
+.schanzen-icon-surface .surface-path {
+  fill: linear-gradient(145deg, #ffffff, #f0f0f0);
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1)) drop-shadow(-1px -1px 3px rgba(226, 232, 240, 0.8)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
+}
+
+.schanzen-dropdown.open .schanzen-dropdown-icon {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.schanzen-dropdown-menu {
+  display: none;
+  position: absolute;
+  z-index: 99999 !important;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-radius: 1.25rem;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px) scale(0.98);
+  transition:
+    opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: visible !important;
+  min-width: 100%;
+}
+
+.schanzen-dropdown.open .schanzen-dropdown-menu {
+  display: block !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateY(-4px) scale(1) !important;
+}
+
+.schanzen-dropdown-options {
+  padding: 0.5rem;
+  overflow: visible !important;
+  z-index: 9999;
+}
+
+.schanzen-dropdown-option {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #0f172a;
+  background: transparent;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: 
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+  white-space: nowrap;
+  overflow: visible !important;
+  text-overflow: ellipsis;
+}
+
+.schanzen-dropdown-option:hover {
+  background: #f1f5f9;
+  color: #002551;
+  transform: translateX(2px);
+}
+
+.schanzen-dropdown-option.selected {
+  background: #e0e7ff;
+  color: #002551;
+  font-weight: 600;
+}
+
+.schanzen-dropdown-option:active {
+  transform: translateX(1px);
+}
+
+/* Mobile Schanzen dropdown adjustments */
+@media (max-width: 768px) {
+  .schanzen-dropdown-container {
+    height: 48px;
+    border-radius: 0.875rem;
+  }
+
+  .schanzen-dropdown-value {
+    font-size: 0.85rem;
+    left: 0.875rem;
+    max-width: calc(100% - 80px);
+  }
+
+  .schanzen-overlay {
+    width: 70px;
+  }
+
+  .schanzen-svg {
+    right: -15px;
+    width: 85px;
+  }
+
+  .schanzen-dropdown-icon {
+    right: 18px;
+    font-size: 1.1rem;
+  }
+
+  .schanzen-icon-surface {
+    width: 70px;
+  }
+
+  .schanzen-icon-surface svg {
+    right: -15px;
+    width: 280px;
+  }
+
+  .schanzen-dropdown-menu {
+    border-radius: 1rem;
+    z-index: 9999999 !important;
+    top: calc(100% + 8px);
+  }
+
+  .schanzen-dropdown-option {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: 0.6rem;
+  }
+
+  /* Ensure mobile config panel doesn't clip dropdowns */
+  #mobileConfigPanel {
+    overflow: visible !important;
+  }
+
+  #mobileConfigContent {
+    overflow: visible !important;
+  }
 }
