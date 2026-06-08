@@ -15,16 +15,14 @@
 <body class="bg-slate-50 text-slate-950">
   <div class="min-h-screen">
     <!-- Desktop Header -->
-    <div class="hidden md:block bg-slate-950 text-white">
-      <div class="mx-auto flex max-w-[1480px] flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8 lg:flex-row lg:items-center lg:justify-between">
-        <div class="space-y-2">
-          <p class="text-sm uppercase tracking-[0.24em] text-sky-300">Campus Navigator</p>
-          <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">HWR FB2 Stundenplan</h1>
-          <p class="max-w-2xl text-slate-300 sm:text-base">Interaktiver Wochenplan mit automatischer Stundenplan-Auswahl, Wochen-Navigation und mobilem Layout.</p>
-        </div>
-        <div class="flex flex-wrap gap-3">
-          <div class="flex items-center gap-2 rounded-2xl bg-slate-800/90 px-4 py-3 text-sm text-slate-200 shadow-sm ring-1 ring-white/10"> <span class="material-symbols-outlined">calendar_month</span> Aktuelle Woche anzeigen </div>
-          <div class="flex items-center gap-2 rounded-2xl bg-slate-800/90 px-4 py-3 text-sm text-slate-200 shadow-sm ring-1 ring-white/10"> <span class="material-symbols-outlined">school</span> FB2 &amp; Wirtschaftswissenschaften</div>
+    <div class="hidden md:block bg-[#001a3d]/70 backdrop-blur-3xl border-b border-white/10 text-white">
+      <div class="mx-auto flex max-w-[1480px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-4">
+          <div class="relative w-16 h-16 overflow-hidden rounded-3xl">
+            <img src="logo.png" alt="Logo" class="absolute w-16 h-16 object-contain">
+            <div class="absolute inset-0 bg-white/10 rounded-3xl border border-white/30 shadow-2xl"></div>
+          </div>
+          <h1 class="text-3xl font-bold tracking-tight">Kursübersicht</h1>
         </div>
       </div>
     </div>
@@ -42,14 +40,14 @@
     <!-- Desktop Main -->
     <main class="hidden md:block mx-auto max-w-[1480px] px-4 pb-16 pt-8 sm:px-6 lg:px-8">
       <section id="pageLayout" class="grid gap-6">
-        <div id="configPanel" class="space-y-4 rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm">
+        <div id="configPanel" class="space-y-4 rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm collapsed">
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Filter</p>
               <h2 class="mt-2 text-2xl font-semibold text-slate-950">Stundenplan konfigurieren</h2>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <button id="toggleFilterButton" class="filter-toggle" type="button" aria-expanded="true"><span class="material-symbols-outlined toggle-icon">expand_more</span>Filter</button>
+              <button id="toggleFilterButton" class="filter-toggle" type="button" aria-expanded="false"><span class="material-symbols-outlined toggle-icon">expand_more</span>Filter</button>
               <button id="toggleProgressLabel" class="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100" type="button">
                 <span class="material-symbols-outlined">percent</span> Tagesfortschritt
               </button>
@@ -156,23 +154,6 @@
           </div>
         </div>
 
-        <!-- Progress Panel (Desktop) -->
-        <div id="desktopProgressPanel" class="hidden space-y-4 rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Tagesfortschritt</p>
-              <h3 class="mt-2 text-xl font-semibold text-slate-950">Heutiger Fortschritt</h3>
-            </div>
-            <div class="text-right">
-              <span id="desktopProgressPercent" class="text-3xl font-bold text-green-600">0%</span>
-            </div>
-          </div>
-          <div class="w-full bg-slate-200 rounded-full h-3">
-            <div id="desktopProgressBar" class="bg-[#002551] h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-          </div>
-          <p id="desktopProgressTime" class="text-sm text-slate-500 mt-2"></p>
-        </div>
-
         <div class="space-y-4 rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm">
           <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -213,13 +194,13 @@
       
       <!-- Filter Toggle Button (positioned outside collapsible content) -->
       <div id="mobileFilterButtonContainer" class="mb-6">
-        <button id="toggleFilterButtonMobile" class="filter-toggle-mobile w-full flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50" type="button" aria-expanded="true">
+        <button id="toggleFilterButtonMobile" class="filter-toggle-mobile w-full flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50" type="button" aria-expanded="false">
           <span class="material-symbols-outlined toggle-icon">expand_more</span> Filter
         </button>
       </div>
 
       <!-- Filter Panel Content (collapsible) -->
-      <div id="mobileConfigPanel" class="mb-6 space-y-5">
+      <div id="mobileConfigPanel" class="mb-6 space-y-5 collapsed">
         <div class="flex flex-col gap-4">
           <div class="mb-2">
             <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Filter</p>

@@ -430,8 +430,8 @@ function renderSchedule(data, selectedSource, referenceDate, searchQuery = '', i
 }
 
 function renderDesktopSchedule(grouped, weekDays, isInitialLoad) {
-  let minHour = 6;
-  let maxHour = 18;
+  let minHour = 7;
+  let maxHour = 21;
   const displayedEvents = [];
 
   weekDays.forEach((day) => {
@@ -522,6 +522,17 @@ function renderDesktopSchedule(grouped, weekDays, isInitialLoad) {
       </section>
     `;
   }).join('');
+
+  // Scroll to a lower position on initial load for desktop
+  if (isInitialLoad && !hasInitialScrollOccurred) {
+    hasInitialScrollOccurred = true;
+    setTimeout(() => {
+      window.scrollTo({
+        top: 400,
+        behavior: 'smooth'
+      });
+    }, 100);
+  }
 }
 
 function renderMobileSchedule(grouped, weekDays, isInitialLoad) {
@@ -881,118 +892,6 @@ function scrollToCurrentDay() {
   if (targetSection) {
     targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-}
-
-function updateDesktopProgressDisplay(data, activeSource, currentWeekStart) {
-  const progressPercent = document.getElementById('desktopProgressPercent');
-  const progressBar = document.getElementById('desktopProgressBar');
-  const progressTime = document.getElementById('desktopProgressTime');
-
-  if (!progressPercent || !progressBar || !progressTime) return;
-
-  const now = new Date();
-  const todayKey = getLocalDateKey(now);
-  const weekDays = Array.from({ length: 5 }, (_, index) => addDays(currentWeekStart, index));
-
-  let events = activeSource ? data.events.filter((event) => event.sourceId === activeSource) : data.events;
-  const grouped = groupEventsByDay(events);
-  const eventsForDay = (grouped[todayKey] || []).slice().sort((a, b) => new Date(a.start) - new Date(b.start));
-
-  const currentDayOfWeek = now.getDay();
-  const isWeekend = currentDayOfWeek === 0 || currentDayOfWeek === 6;
-  const hasEventsToday = eventsForDay.length > 0;
-
-  if (isWeekend && !hasEventsToday) {
-    progressPercent.textContent = '0%';
-    progressTime.textContent = 'Wochenende - 100% abgeschlossen';
-    if (shouldAnimateProgress) {
-      animateProgress(progressBar, '100%', 1500);
-      let currentProgress = 0;
-      const animationInterval = setInterval(() => {
-        currentProgress += 2;
-        if (currentProgress > 100) currentProgress = 100;
-        updatePercentColor(progressPercent, currentProgress);
-        if (currentProgress >= 100) {
-          clearInterval(animationInterval);
-          progressPercent.textContent = '100%';
-        }
-      }, 30);
-      setTimeout(() => {
-        progressPercent.textContent = '100%';
-      }, 1500);
-    } else {
-      progressBar.style.width = '100%';
-      progressPercent.textContent = '100%';
-      updatePercentColor(progressPercent, 100);
-    }
-    return;
-  }
-
-  if (eventsForDay.length === 0) {
-    progressPercent.textContent = '0%';
-    progressBar.style.width = '0%';
-    progressTime.textContent = 'Heute keine Veranstaltungen';
-    return;
-  }
-
-  const dayStart = eventsForDay.reduce((min, ev) => {
-    const start = new Date(ev.start).getTime();
-    return Math.min(min, start);
-  }, Infinity);
-  const dayEnd = eventsForDay.reduce((max, ev) => {
-    const end = new Date(ev.end).getTime();
-    return Math.max(max, end);
-  }, -Infinity);
-
-  if (dayStart >= dayEnd) {
-    progressPercent.textContent = '0%';
-    progressBar.style.width = '0%';
-    progressTime.textContent = 'Ungültige Zeitangabe';
-    return;
-  }
-
-  const currentHour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
-  const startHour = new Date(dayStart).getHours() + new Date(dayStart).getMinutes() / 60;
-  const endHour = new Date(dayEnd).getHours() + new Date(dayEnd).getMinutes() / 60;
-
-  let progressPercentValue;
-  if (currentHour < startHour) {
-    progressPercentValue = 0;
-  } else if (currentHour > endHour) {
-    progressPercentValue = 100;
-  } else {
-    progressPercentValue = ((currentHour - startHour) / (endHour - startHour)) * 100;
-  }
-
-  const finalPercent = `${Math.round(progressPercentValue)}%`;
-  
-  if (shouldAnimateProgress) {
-    progressPercent.textContent = '0%';
-    updatePercentColor(progressPercent, 0);
-    animateProgress(progressBar, finalPercent, 1500);
-    let currentProgress = 0;
-    const animationInterval = setInterval(() => {
-      currentProgress += 2;
-      if (currentProgress > progressPercentValue) currentProgress = progressPercentValue;
-      updatePercentColor(progressPercent, currentProgress);
-      if (currentProgress >= progressPercentValue) {
-        clearInterval(animationInterval);
-        progressPercent.textContent = finalPercent;
-      }
-    }, 30);
-    setTimeout(() => {
-      progressPercent.textContent = finalPercent;
-    }, 1500);
-  } else {
-    progressPercent.textContent = finalPercent;
-    progressBar.style.width = finalPercent;
-    updatePercentColor(progressPercent, progressPercentValue);
-  }
-
-  const currentTimeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-  const startTimeStr = new Date(dayStart).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-  const endTimeStr = new Date(dayEnd).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-  progressTime.textContent = `Jetzt: ${currentTimeStr} | Tag: ${startTimeStr} - ${endTimeStr}`;
 }
 
 function getFavorites() {
@@ -1779,18 +1678,22 @@ async function init() {
 
     if (toggleProgressButton) {
       toggleProgressButton.addEventListener('click', () => {
-        const progressPanel = document.getElementById('desktopProgressPanel');
-        if (progressPanel) {
-          const isHidden = progressPanel.classList.contains('hidden');
-          if (isHidden) {
-            progressPanel.classList.remove('hidden');
-            updateDesktopProgressDisplay(data, activeSource, currentWeekStart);
-            toggleProgressButton.classList.add('progress-active');
-          } else {
-            progressPanel.classList.add('hidden');
-            toggleProgressButton.classList.remove('progress-active');
-          }
+        showProgressLabel = !showProgressLabel;
+        localStorage.setItem(PROGRESS_LABEL_KEY, String(showProgressLabel));
+        if (showProgressLabel) {
+          toggleProgressButton.classList.add('progress-active');
+        } else {
+          toggleProgressButton.classList.remove('progress-active');
         }
+        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+        
+        // Scroll to schedule grid
+        setTimeout(() => {
+          const scheduleGrid = document.querySelector('.schedule-table-container');
+          if (scheduleGrid) {
+            scheduleGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
       });
     }
 
@@ -2037,16 +1940,31 @@ async function init() {
         const mobileConfigPanel = document.getElementById('mobileConfigPanel');
         const icon = toggleButtonMobile.querySelector('.toggle-icon');
         const isCollapsed = mobileConfigPanel.classList.contains('collapsed');
-        
+
         if (mobileConfigPanel) {
           if (isCollapsed) {
+            // Expand: set height to scrollHeight first, then animate to auto
+            mobileConfigPanel.style.height = mobileConfigPanel.scrollHeight + 'px';
             mobileConfigPanel.classList.remove('collapsed');
             toggleButtonMobile.setAttribute('aria-expanded', 'true');
             if (icon) icon.textContent = 'expand_less';
+
+            // After animation completes, set height to auto
+            setTimeout(() => {
+              mobileConfigPanel.style.height = 'auto';
+            }, 400);
           } else {
+            // Collapse: set height to scrollHeight first, then animate to 0
+            mobileConfigPanel.style.height = mobileConfigPanel.scrollHeight + 'px';
             mobileConfigPanel.classList.add('collapsed');
             toggleButtonMobile.setAttribute('aria-expanded', 'false');
             if (icon) icon.textContent = 'expand_more';
+
+            // Force reflow
+            mobileConfigPanel.offsetHeight;
+
+            // Animate to 0
+            mobileConfigPanel.style.height = '0';
           }
         }
       });

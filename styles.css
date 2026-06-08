@@ -2,10 +2,8 @@
 html { scroll-behavior: smooth; }
 body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
 .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-
-/* Desktop styles */
-.schedule-table-container { overflow-x: hidden; }
-.schedule-grid-wrapper { display: grid; grid-template-columns: 84px minmax(0,1fr); border: 1px solid #e2e8f0; border-radius: 1.5rem; background: #ffffff; min-width: 900px; max-width: 100%; }
+.schedule-table-container { overflow-x: auto; border-radius: 2rem; }
+.schedule-grid-wrapper { display: grid; grid-template-columns: 84px minmax(0,1fr); border: 1px solid #e2e8f0; border-radius: 2rem; background: #ffffff; min-width: 900px; max-width: 100%; overflow: hidden; }
 .time-column { background: #f8fafc; border-right: 1px solid #e2e8f0; }
 .time-slot { min-height: calc(var(--slot-height, 90px)); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 0.85rem; }
 .days-grid { display: grid; grid-template-columns: repeat(5, minmax(170px, 1fr)); width: 100%; }
@@ -18,9 +16,7 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
 .day-date-grid { margin-top: 0.35rem; font-size: 0.92rem; color: #475569; }
 .day-content { position: relative; min-height: calc(var(--day-height, 720px)); background: repeating-linear-gradient(transparent 0, transparent calc(var(--slot-height,90px) - 1px), rgba(148,163,184,0.08) calc(var(--slot-height,90px) - 1px), rgba(148,163,184,0.08) var(--slot-height,90px)); }
 .current-time-indicator { position: absolute; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, rgba(22,163,74,0) 0%, rgba(22,163,74,0.95) 20%, rgba(22,163,74,0.95) 80%, rgba(22,163,74,0) 100%); box-shadow: 0 0 18px rgba(22, 163, 74, 0.25); z-index: 10; }
-.current-time-indicator::before { content: attr(data-label); position: absolute; top: -1.15rem; right: 0.75rem; transform: translateY(-100%); background: rgba(22,163,74,0.95); color: #ffffff; padding: 0.35rem 0.85rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.01em; white-space: nowrap; box-shadow: 0 10px 20px rgba(22, 163, 74, 0.18); }
-.current-time-indicator.no-label::before { display: none; }
-.current-time-indicator.with-label::after { content: attr(data-progress); position: absolute; top: -1.15rem; left: 0.75rem; transform: translateY(-100%); background: rgba(37, 99, 235, 0.95); color: #ffffff; padding: 0.35rem 0.85rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.01em; white-space: nowrap; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18); }
+.current-time-indicator.with-label::after { content: attr(data-progress); position: absolute; top: 50%; left: -3.0rem; transform: translateY(-50%); background: rgba(22, 163, 74, 0.85); color: #ffffff; padding: 0.35rem 0.85rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.01em; white-space: nowrap; box-shadow: 0 10px 20px rgba(22, 163, 74, 0.18); }
 #weekLabel { display: inline-flex; min-width: 9rem; justify-content: center; font-size: 0.82rem; font-weight: 700; padding: 0.6rem 1.4rem; white-space: nowrap; }
 .event-item { position: absolute; left: 0.65rem; right: 0.65rem; padding: 0.8rem 0.95rem 0.8rem 0.5rem; border-radius: 1rem; background: #ffffff; border: 1px solid #e2e8f0; border-left-width: 4px; border-left-color: #3b82f6; box-shadow: 0 18px 40px rgba(15, 23, 42, 0.09); overflow: visible; transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
 .event-item:hover { transform: translateY(-1px); box-shadow: 0 22px 45px rgba(15, 23, 42, 0.14); }
@@ -100,21 +96,18 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
     padding: 20px;
     margin-bottom: 24px;
-    overflow-y: auto;
-    max-height: none;
+    overflow: hidden;
+    height: auto;
     opacity: 1;
-    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 99999;
+    transition: height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: 1;
     isolation: isolate;
+    will-change: height, opacity;
   }
   #mobileConfigPanel.collapsed {
-    max-height: 0;
+    height: 0;
     opacity: 0;
-    transform: translateY(-10px);
-    padding-top: 0;
-    padding-bottom: 0;
     margin-bottom: 0;
-    overflow: hidden;
   }
   
   /* Mobile filter button - positioned independently */
@@ -123,7 +116,7 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
     z-index: 10;
   }
   .filter-toggle-mobile .toggle-icon {
-    transition: transform 0.25s ease;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
   .filter-toggle-mobile[aria-expanded="false"] .toggle-icon {
     transform: rotate(180deg);
@@ -257,77 +250,6 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
   border-color: rgba(34, 197, 94, 0.25);
   box-shadow: 0 4px 16px rgba(34, 197, 94, 0.08), 0 2px 8px rgba(34, 197, 94, 0.05);
   color: #166534;
-}
-
-/* Cool progress bar animations with glow effects */
-#desktopProgressBar {
-  position: relative;
-  overflow: hidden;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #e2e8f0 0%, #cbd5e1 100%);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-#desktopProgressBar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, 
-    rgba(37, 99, 235, 0.8) 0%, 
-    rgba(59, 130, 246, 0.9) 25%, 
-    rgba(96, 165, 250, 0.95) 50%, 
-    rgba(59, 130, 246, 0.9) 75%, 
-    rgba(37, 99, 235, 0.8) 100%);
-  background-size: 200% 100%;
-  animation: progressGlow 2s ease-in-out infinite;
-  border-radius: 999px;
-  box-shadow: 
-    0 0 20px rgba(59, 130, 246, 0.5),
-    0 0 40px rgba(59, 130, 246, 0.3),
-    0 0 60px rgba(59, 130, 246, 0.1);
-}
-
-@keyframes progressGlow {
-  0%, 100% {
-    background-position: 0% 50%;
-    box-shadow: 
-      0 0 20px rgba(59, 130, 246, 0.5),
-      0 0 40px rgba(59, 130, 246, 0.3),
-      0 0 60px rgba(59, 130, 246, 0.1);
-  }
-  50% {
-    background-position: 100% 50%;
-    box-shadow: 
-      0 0 30px rgba(59, 130, 246, 0.7),
-      0 0 60px rgba(59, 130, 246, 0.5),
-      0 0 90px rgba(59, 130, 246, 0.3);
-  }
-}
-
-#desktopProgressBar::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(255, 255, 255, 0.4) 50%, 
-    transparent 100%);
-  animation: progressShine 2s ease-in-out infinite;
-}
-
-@keyframes progressShine {
-  0% {
-    left: -100%;
-  }
-  100% {
-    left: 200%;
-  }
 }
 
 /* Mobile weekend progress bar with cool effects */
@@ -511,49 +433,7 @@ body { margin: 0; background: #f8fafc; color: #0f172a; overflow-x: hidden; }
   animation: none;
 }
 
-/* Desktop progress panel with enhanced effects */
-#desktopProgressPanel {
-  position: relative;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    0 4px 16px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  animation: panelFadeIn 0.5s ease-out;
-}
-
-#desktopProgressPanel:hover {
-  box-shadow: 
-    0 20px 40px -15px rgba(15, 23, 42, 0.12),
-    0 50px 100px -25px rgba(15, 23, 42, 0.18);
-}
-
-@keyframes panelFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-#desktopProgressPercent {
-  text-shadow: none;
-  animation: none;
-}
-
-#desktopProgressPercent.percent-green,
-.weekend-progress-percent.percent-green,
-[class^="day-progress-percent-"].percent-green {
-  color: #16a34a !important;
-}
-
 /* Elastic rebound effect for progress bars */
-#desktopProgressBar,
 .weekend-progress-bar,
 [class^="day-progress-bar-"] {
   transition: width 0.08s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -619,7 +499,7 @@ label.block {
   height: 52px;
   background: linear-gradient(145deg, #f5f7fa, #e8eaf0);
   border-radius: 1rem;
-  box-shadow: 
+  box-shadow:
     inset 2px 2px 4px rgba(0, 0, 0, 0.06),
     inset -1px -1px 3px rgba(255, 255, 255, 0.8),
     3px 4px 8px rgba(0, 0, 0, 0.1),
@@ -629,7 +509,10 @@ label.block {
   transition: box-shadow 0.2s ease;
   overflow: hidden;
   z-index: 10;
-
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 
@@ -656,6 +539,10 @@ label.block {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: calc(100% - 90px);
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .schanzen-overlay {
@@ -729,7 +616,7 @@ label.block {
 .schanzen-dropdown-menu {
   display: none;
   position: absolute;
-  z-index: 99999 !important;
+  z-index: 40 !important;
   top: calc(100% + 8px);
   left: 0;
   right: 0;
@@ -775,13 +662,17 @@ label.block {
   border: none;
   border-radius: 0.75rem;
   cursor: pointer;
-  transition: 
+  transition:
     background 0.15s ease,
     color 0.15s ease,
     transform 0.15s ease;
   white-space: nowrap;
   overflow: visible !important;
   text-overflow: ellipsis;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .schanzen-dropdown-option:hover {
@@ -838,7 +729,7 @@ label.block {
 
   .schanzen-dropdown-menu {
     border-radius: 1rem;
-    z-index: 9999999 !important;
+    z-index: 40 !important;
     top: calc(100% + 8px);
   }
 
