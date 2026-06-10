@@ -6,11 +6,13 @@ const PROGRESS_LABEL_KEY = 'st-plan-progress-label';
 const FAVORITES_KEY = 'st-plan-favorites';
 const PENDING_DELETE_KEY = 'st-plan-pending-delete';
 const DAILY_VISIT_KEY = 'st-plan-daily-visit';
+const SHOW_ALL_EVENTS_KEY = 'st-plan-show-all-events';
 const CACHE_EXPIRY_HOURS = 24;
 let filterCollapsed = false;
 let hasInitialScrollOccurred = false;
 let showProgressLabel = false;
 let shouldAnimateProgress = false;
+let showAllEvents = false;
 
 function hasVisitedToday() {
   const todayKey = getLocalDateKey(new Date());
@@ -222,9 +224,410 @@ function stripTitlePrefix(title) {
   return title.replace(/^\s*\d+\s*-\s*/, '').trim();
 }
 
-function formatTeacherName(teacher) {
+// Reference lecturer list from HWR personnel database
+const LECTURER_REFERENCE_LIST = [
+  "Affeldt, Simone",
+  "Afflerbach, Prof. Dr. Thomas",
+  "Ahner, Christine",
+  "Barten, Prof. Dr. Michael",
+  "Becker, Prof. Dr. Kai Helge",
+  "Beckert, Andrea",
+  "Bergmann, Prof. Dr. Rainer",
+  "Blase, Bernd",
+  "Bleis, Prof. Dr. Christian",
+  "Bloch, Anja",
+  "Bories, Jonas",
+  "Brakopp, Inga",
+  "Bremer, Christian",
+  "Brenninger, Klaus",
+  "Burchert, Janna",
+  "Burghardt, Dr. Frank",
+  "Bustamante, Prof. Dr. Silke",
+  "Cichos, Prof. Dr.-Ing. Sven",
+  "Damm, Anke",
+  "Deimer, Prof. Dr. Klaus",
+  "de Queiroz Gama, Dr. Marco",
+  "Detzel, Prof. Dr.-Ing. Annette",
+  "Dieterle, Prof. Dr. Prof. h. c. (IKH Zasag University/Mongolia) Willi K. M.",
+  "Dimitrov, Dr. Evgeni",
+  "Druffel, Christina",
+  "Eichele, Dr. Wolfgang",
+  "Eisenhauer, Lena",
+  "Elwardt, Dipl.-Ing. Johannes",
+  "Erhardt, Peter",
+  "Erkens, Prof. Dr. Elmar",
+  "Eutebach, Volker",
+  "Fabian, Marcel",
+  "Fabian, Patrick",
+  "Faden, Dr. Christoph",
+  "Faustmann, Prof. Dr.-Ing. Gert",
+  "Fechter, Prof. Dr. Charlotte",
+  "Ferreira Furtado, Prof. Dr. Luis Fernando",
+  "Findikci, Dr. habil. Aydin",
+  "Fischer, Marc-Steven",
+  "Fischer, Prof. Dr. Sebastian",
+  "Fleck, Thomas",
+  "Forberg, Dr. Torsten",
+  "Forchert, Dipl.-Ing. Carl-Ernst",
+  "Fürtjes, Dr. Heinz-Theo",
+  "Goestl, Dr.-Ing. Herbert",
+  "Grohmann, Prof. Dr. Björn",
+  "Gruber-Beerfeltz, Iris",
+  "Hackelberg, Prof. Dr. Florian",
+  "Hagen-Franz, Antje",
+  "Hannicke, Christian",
+  "Hariskos, Dr. Wasilios",
+  "Harloff, Annika",
+  "Hartenstein, Sandro",
+  "Herwig, Julian",
+  "Hertwig, Dr. Jana",
+  "Hasse, Dr. phil. Dieter",
+  "Hedergott, Dr. Doreen",
+  "Heerma, Tanja",
+  "Hesse, Dr.-Ing. Raik",
+  "Hesse, Prof. Dr. Martina",
+  "Hilverkus, Achim",
+  "Hoffmann, Kerstin",
+  "Hoffmann, René",
+  "Hofstetter, Prof. Helmut",
+  "Huber, Christian",
+  "Jalyschko, Marianna",
+  "Jurgec, Diana",
+  "Kadow, Christian",
+  "Kalenberg, Prof. Dr. Frank",
+  "Kalkbrenner, Prof. Dr. Gerrit",
+  "Kaltschew, Dr. Kristian",
+  "Kaplan, Demet",
+  "Kasten, Prof. Dr. Tanja",
+  "Keller, Dr.-Ing. Jürgen",
+  "Khalid, Jasmin",
+  "Knipp, Sigrun",
+  "Knobloch, Prof. Dr. Ulrike",
+  "Köhne, Prof. Dr. Thomas",
+  "Kononenko, Nikolai",
+  "Kothe, Robert",
+  "Krawczack, Peter",
+  "Kreß, Michaela",
+  "Kreutzer, Diana",
+  "Krüger, Stefan",
+  "Kuckenburg, Dipl. Ing. Tomas",
+  "Kurzawa, Prof. Dr.-Ing. Thorsten",
+  "Latorre, Joana",
+  "Launert, Janet-Jessica",
+  "Leinemann, Prof. Dr. Ralf",
+  "Lemke, Dr. Claudia",
+  "Lemke, Prof. Dr. Claudia",
+  "Levchenko, Nataliia",
+  "Liesegang, Thomas",
+  "Linnemann, Dr.-Ing. Maik",
+  "Linz, Prof. Dr. Dorle",
+  "List, Dr.-Ing. Michael",
+  "Lück, Katrin",
+  "Lüdeke, Henri",
+  "Lundszien, Prof. Dr. Dietmar",
+  "Magalashvili, Vladimir",
+  "Meixner, RA Oliver",
+  "Mertens, Prof. Dr. Antje",
+  "Mirzaee, Behnam",
+  "Monett Díaz, Alejandro",
+  "Monett Díaz, Prof. Dr. Dagmar",
+  "Mugele, Prof. Dr. –Ing. Jan",
+  "Mulzer, Dipl.-Ing. Tasso",
+  "Münchow, Katrin",
+  "Nabialek, Prof. Dr. Jarosław",
+  "Nastansky, Prof. Dr. Andreas",
+  "Nauwald, Silvia",
+  "Nowak, Olivia",
+  "Ohilko, Daniil",
+  "Paarz, Prof. Dr. Michael",
+  "Pankau, Klaus",
+  "Pätzoldt, Jeanette",
+  "Pelzeter, Prof. Dr. Andrea",
+  "Piasetzki, Adrian",
+  "Pietschmann, Prof. Dr.-Ing. Peter",
+  "Plotkin, Prof. Dr.-Ing. Prof. h.c. Juriy",
+  "Pole, Peggy",
+  "Radde, Prof. Dr. Jens",
+  "Räder, Michael",
+  "Radu, Oana",
+  "Raethel, Prof. Dr. Jeannette",
+  "Resch, Prof. Dr. Olaf",
+  "Rigas, Prof. Dr. Niki",
+  "Ringhand, Prof. Dr. Klaus",
+  "Ritsch, Simon",
+  "Rochnowski, Prof. Dr. Sandra",
+  "Rohr, Andreas",
+  "Rommel, Winfried",
+  "Rosentreter, Prof. Dr. Gabriele",
+  "Rothenburg, Lars",
+  "Roxin, Prof. Dr. Jan",
+  "Schebera, Dipl.oec. Mathias",
+  "Scherwitzki, Sarah",
+  "Schlesinger, Prof. Dr.-Ing. Sebastian",
+  "Schlösser, Prof. Dr. Rico",
+  "Schmeitzner, Prof. Dr.-Ing. Helmut",
+  "Schmidt, Philipp",
+  "Schmietendorf, Prof. Dr. Andreas",
+  "Schnepf, Simone",
+  "Schnieders, Dr. Ralf",
+  "Schober, Kerstin",
+  "Scholz, Daniel",
+  "Scholz, Jessica",
+  "Schomäcker, Prof. Dr.-Ing. Michael",
+  "Schulz, Julia",
+  "Schulz, Udo R.",
+  "Schulz-Bücher, Ines",
+  "Schwertfeger, Prof. Dr. Marko",
+  "Schwichtenberg, Jörg",
+  "Siewert, Heiko",
+  "Siegert, Michael",
+  "Simmons, Marvin",
+  "Sooth, Christian Paul",
+  "Sotriffer, Ingomar",
+  "Specht, Dr. Mark",
+  "Stammler-Gesiehn, Uwe",
+  "Stampa, Karsten",
+  "Staniek, Martin",
+  "Stein, Alexandra",
+  "Steinmann, Prof. Dr.-Ing. Alexander",
+  "Sternberg, Serkan",
+  "Stiegler, Prof. Dr. Sascha",
+  "Tautz, Manuela",
+  "Theuer, Patrick",
+  "Thomas, Klaus",
+  "Tiefensee, Prof. Dr. Anita",
+  "Tippelhofer, Prof. Dr. Martina",
+  "Tirpitz, Prof. Dr. Alexander",
+  "Vogt, Florian",
+  "Volkenandt, Dr. Götz",
+  "von Gizycki, Prof. Dr. Vittoria",
+  "von Saucken, Prof. Dr. Anna",
+  "Voshage, Prof. Dr. Ramona",
+  "Wache, Tatjana",
+  "Wagner, Dr. Kerstin",
+  "Wagner, Laura",
+  "Walsdorf-Maul, Dipl.-Ing. Manuela",
+  "Walz, Ute",
+  "Wannemacher, Tobias",
+  "Wenzel, Martina",
+  "Wildebrand, Prof. Dr. Hendrik",
+  "Wildner, Dr. Martin",
+  "Wilhelm, Prof. Dr. Stefan",
+  "Winter, Prof. Dr. Nicola",
+  "Wittmann, Claudia",
+  "Wittmüß, Antje",
+  "Wolff, Lars",
+  "Woogt, Prof. Dr. Sven",
+  "Wotschke, Prof. Dr. Peter",
+  "Yankova, Dipl. Med.-Inf. Aglika",
+  "Yenoktaiev, Rostyslav",
+  "Yollu-Tok, Prof. Dr. Aysel",
+  "Zeytouni, Fereshteh",
+  "Ziener, Peggy",
+  "Zimmermann, Prof. Dr. Arthur",
+  "Zimmermann, Roxana"
+];
+
+// Build a reference map from the lecturer list for quick lookup
+function buildLecturerReferenceMap() {
+  const referenceMap = new Map();
+  
+  LECTURER_REFERENCE_LIST.forEach(fullName => {
+    const parsed = parseLecturerName(fullName);
+    if (!parsed) return;
+    
+    const lastName = parsed.lastName.toLowerCase();
+    
+    if (!referenceMap.has(lastName)) {
+      referenceMap.set(lastName, []);
+    }
+    
+    referenceMap.get(lastName).push(parsed);
+  });
+  
+  return referenceMap;
+}
+
+// Global reference map (built once at initialization)
+let lecturerReferenceMap = null;
+
+function getLecturerReferenceMap() {
+  if (!lecturerReferenceMap) {
+    lecturerReferenceMap = buildLecturerReferenceMap();
+  }
+  return lecturerReferenceMap;
+}
+
+function parseLecturerName(name) {
+  if (!name) return null;
+  
+  const trimmed = name.trim();
+  
+  // Try to match pattern: "Nachname, Titel Vorname" or "Nachname, Titel Vorname Zusatz"
+  // Examples: "Dimitrov, Dr. Evgeni", "Dieterle, Prof. Dr. Prof. h. c. (IKH Zasag University/Mongolia) Willi K. M."
+  const commaMatch = trimmed.match(/^([^,]+),\s*(.+)$/);
+  
+  if (commaMatch) {
+    let lastName = commaMatch[1].trim();
+    const rest = commaMatch[2].trim();
+    
+    // Extract title from the rest (everything before the first name)
+    // Titles typically start with: Dr., Prof., Prof. Dr., etc.
+    const titleMatch = rest.match(/^((?:Prof\.?\s*)?(?:Dr\.?\s*)?(?:Prof\.?\s*)?(?:h\.?\s*c\.?\s*)?(?:\([^)]+\)\s*)*)/i);
+    const title = titleMatch ? titleMatch[1].trim() : '';
+    
+    // Extract first name (everything after the title)
+    const firstName = rest.replace(titleMatch ? titleMatch[0] : '', '').trim();
+    
+    return {
+      lastName,
+      title,
+      firstName,
+      original: trimmed
+    };
+  }
+  
+  // If no comma, try to parse as "Titel Vorname Nachname"
+  // This is less common but might occur
+  const parts = trimmed.split(/\s+/);
+  if (parts.length >= 2) {
+    // Handle German noble prefixes: von, zu, van, de, etc.
+    // These should be part of the last name
+    const noblePrefixes = ['von', 'zu', 'van', 'de', 'der', 'den', 'des'];
+    let lastNameIndex = parts.length - 1;
+    
+    // Check if the last part is preceded by a noble prefix
+    if (lastNameIndex > 0 && noblePrefixes.includes(parts[lastNameIndex - 1].toLowerCase())) {
+      lastNameIndex = lastNameIndex - 1;
+    }
+    
+    const lastName = parts.slice(lastNameIndex).join(' ');
+    const titleAndFirstName = parts.slice(0, lastNameIndex).join(' ');
+    
+    // Try to extract title
+    const titleMatch = titleAndFirstName.match(/^((?:Prof\.?\s*)?(?:Dr\.?\s*)?(?:Prof\.?\s*)?(?:h\.?\s*c\.?\s*)?(?:\([^)]+\)\s*)*)/i);
+    const title = titleMatch ? titleMatch[1].trim() : '';
+    const firstName = titleAndFirstName.replace(titleMatch ? titleMatch[0] : '', '').trim();
+    
+    return {
+      lastName,
+      title,
+      firstName,
+      original: trimmed
+    };
+  }
+  
+  // Fallback: treat entire string as last name
+  return {
+    lastName: trimmed,
+    title: '',
+    firstName: '',
+    original: trimmed
+  };
+}
+
+function buildLecturerDatabase(events) {
+  const lecturerMap = new Map();
+  const referenceMap = getLecturerReferenceMap();
+  
+  events.forEach(event => {
+    const teacherText = event.teacher || extractTeacherFromDescription(event.rawDescription || '');
+    if (!teacherText) return;
+    
+    // Handle multiple teachers separated by comma
+    const teachers = teacherText.split(',').map(t => t.trim()).filter(Boolean);
+    
+    teachers.forEach(teacher => {
+      const parsed = parseLecturerName(teacher);
+      if (!parsed) return;
+      
+      const lastName = parsed.lastName.toLowerCase();
+      
+      // Check if this lecturer exists in the reference list
+      let referenceLecturers = referenceMap.get(lastName);
+      let lecturerData = parsed;
+      
+      // If no exact match, try to find partial matches (e.g., "saucken" matches "von Saucken")
+      if (!referenceLecturers || referenceLecturers.length === 0) {
+        for (const [refLastName, refs] of referenceMap) {
+          if (refLastName.includes(lastName) || lastName.includes(refLastName)) {
+            referenceLecturers = refs;
+            break;
+          }
+        }
+      }
+      
+      if (referenceLecturers && referenceLecturers.length > 0) {
+        // If there's only one lecturer with this last name in reference list,
+        // use their data (including title and correct last name) without needing first name matching
+        if (referenceLecturers.length === 1) {
+          lecturerData = { ...referenceLecturers[0], original: parsed.original };
+        } else if (parsed.firstName) {
+          // Multiple lecturers with same last name - try to match by first name
+          const match = referenceLecturers.find(ref => {
+            const refFirstName = ref.firstName.toLowerCase();
+            const parsedFirstName = parsed.firstName.toLowerCase();
+            return refFirstName === parsedFirstName || 
+                   refFirstName.includes(parsedFirstName) || 
+                   parsedFirstName.includes(refFirstName);
+          });
+          
+          if (match) {
+            lecturerData = { ...match, original: parsed.original };
+          }
+        }
+      }
+      
+      if (!lecturerMap.has(lastName)) {
+        lecturerMap.set(lastName, []);
+      }
+      
+      lecturerMap.get(lastName).push(lecturerData);
+    });
+  });
+  
+  return lecturerMap;
+}
+
+function formatTeacherName(teacher, lecturerDb = null) {
   if (!teacher) return '';
-  return teacher.split(',').map(t => t.trim()).filter(Boolean).join(', ');
+  
+  // If no lecturer database provided, use simple formatting
+  if (!lecturerDb) {
+    return teacher.split(',').map(t => t.trim()).filter(Boolean).join(', ');
+  }
+  
+  // Handle multiple teachers separated by comma
+  const teachers = teacher.split(',').map(t => t.trim()).filter(Boolean);
+  
+  return teachers.map(t => {
+    const parsed = parseLecturerName(t);
+    if (!parsed) return t;
+    
+    const lastName = parsed.lastName.toLowerCase();
+    const lecturersWithSameLastName = lecturerDb.get(lastName);
+    
+    // Use the lecturer data from the database (which includes the correct title from LECTURER_REFERENCE_LIST)
+    if (lecturersWithSameLastName && lecturersWithSameLastName.length > 0) {
+      // Use the first matching lecturer's data (which has the correct title)
+      const lecturerData = lecturersWithSameLastName[0];
+      
+      // Always show title if we have one from the reference list
+      if (lecturerData.title) {
+        return `${lecturerData.title} ${lecturerData.lastName}`.trim();
+      }
+      
+      // Return just last name (no title, no first name)
+      return lecturerData.lastName;
+    }
+    
+    // Fallback: use parsed data if not found in database
+    if (parsed.title) {
+      return `${parsed.title} ${parsed.lastName}`.trim();
+    }
+    
+    return parsed.lastName;
+  }).join(', ');
 }
 
 function extractTeacherFromDescription(rawDescription) {
@@ -233,6 +636,47 @@ function extractTeacherFromDescription(rawDescription) {
   if (!match || !match[1]) return '';
   const teacher = match[1].trim();
   return teacher === '-' ? '' : teacher;
+}
+
+function isLecturerInReferenceList(teacherName) {
+  if (!teacherName) return false;
+  
+  const parsed = parseLecturerName(teacherName);
+  if (!parsed) return false;
+  
+  const lastName = parsed.lastName.toLowerCase();
+  const referenceMap = getLecturerReferenceMap();
+  
+  // Check for exact last name match
+  if (referenceMap.has(lastName)) {
+    const referenceLecturers = referenceMap.get(lastName);
+    
+    // If there's only one lecturer with this last name, it's a match
+    if (referenceLecturers.length === 1) {
+      return true;
+    }
+    
+    // If multiple lecturers with same last name, try to match by first name
+    if (parsed.firstName) {
+      const match = referenceLecturers.find(ref => {
+        const refFirstName = ref.firstName.toLowerCase();
+        const parsedFirstName = parsed.firstName.toLowerCase();
+        return refFirstName === parsedFirstName || 
+               refFirstName.includes(parsedFirstName) || 
+               parsedFirstName.includes(refFirstName);
+      });
+      if (match) return true;
+    }
+  }
+  
+  // Try partial matches (e.g., "saucken" matches "von Saucken")
+  for (const [refLastName, refs] of referenceMap) {
+    if (refLastName.includes(lastName) || lastName.includes(refLastName)) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 function formatCourseLabel(title) {
@@ -378,15 +822,18 @@ function renderSkeletonLoader() {
 }
 
 function renderSchedule(data, selectedSource, referenceDate, searchQuery = '', isInitialLoad = false) {
-  let events = selectedSource ? data.events.filter((event) => event.sourceId === selectedSource) : [];
-  
+  let events = showAllEvents ? data.events : (selectedSource ? data.events.filter((event) => event.sourceId === selectedSource) : []);
+
+  // Build lecturer database from all events to handle duplicate last names
+  const lecturerDb = buildLecturerDatabase(data.events);
+
   if (searchQuery && searchQuery.trim()) {
     const query = searchQuery.toLowerCase().trim();
     events = events.filter(event => {
       const title = (event.title || '').toLowerCase();
       const location = (event.location || '').toLowerCase();
       const teacherText = event.teacher || extractTeacherFromDescription(event.rawDescription || '');
-      const teacher = formatTeacherName(teacherText).toLowerCase();
+      const teacher = formatTeacherName(teacherText, lecturerDb).toLowerCase();
       const description = (event.rawDescription || '').toLowerCase();
       
       return title.includes(query) || 
@@ -423,13 +870,13 @@ function renderSchedule(data, selectedSource, referenceDate, searchQuery = '', i
   const weekDays = Array.from({ length: hasSaturdayEvents ? 6 : 5 }, (_, index) => addDays(weekStart, index));
 
   if (isMobile()) {
-    renderMobileSchedule(grouped, weekDays, isInitialLoad);
+    renderMobileSchedule(grouped, weekDays, isInitialLoad, lecturerDb);
   } else {
-    renderDesktopSchedule(grouped, weekDays, isInitialLoad);
+    renderDesktopSchedule(grouped, weekDays, isInitialLoad, lecturerDb);
   }
 }
 
-function renderDesktopSchedule(grouped, weekDays, isInitialLoad) {
+function renderDesktopSchedule(grouped, weekDays, isInitialLoad, lecturerDb) {
   let minHour = 7;
   let maxHour = 21;
   const displayedEvents = [];
@@ -486,7 +933,7 @@ function renderDesktopSchedule(grouped, weekDays, isInitialLoad) {
       const isAsync = !isExam && !isOnline && (/asynchron/.test(notes) || /asynchrone lehre/.test(notes));
       const location = ev.location ? `<div class="event-item-meta"><span class="material-symbols-outlined" style="font-size: 0.9rem;">location_on</span> ${ev.location}${isAsync ? ' <span style="color: #7c3aed;">(asynchron)</span>' : ''}</div>` : '';
       const teacherText = ev.teacher || extractTeacherFromDescription(ev.rawDescription || '');
-      const teacher = teacherText ? `<div class="event-item-meta"><span class="material-symbols-outlined" style="font-size: 0.9rem;">person</span> ${formatTeacherName(teacherText)}</div>` : '';
+      const teacher = teacherText ? `<div class="event-item-meta"><span class="material-symbols-outlined" style="font-size: 0.9rem;">person</span> ${formatTeacherName(teacherText, lecturerDb)}</div>` : '';
       const typeClass = isExam ? ' exam' : isOnline ? ' online' : isAsync ? ' async' : '';
       let typeLabel = 'Vorlesung';
       let pillColorClass = 'pill-blue';
@@ -501,6 +948,17 @@ function renderDesktopSchedule(grouped, weekDays, isInitialLoad) {
         pillColorClass = 'pill-purple';
       }
       const pillTag = `<div class="pill ${pillColorClass}">${typeLabel}</div>`;
+      
+      // Check if lecturer is not in reference list and add warning icon
+      // let warningIcon = '';
+      // const isSpecialCase = teacherText && teacherText.toLowerCase() === 'pause';
+      // if (teacherText && !isLecturerInReferenceList(teacherText) && !isSpecialCase) {
+      //   warningIcon = `<div class="lecturer-warning-icon">
+      //     <span class="material-symbols-outlined">warning</span>
+      //     <div class="lecturer-warning-tooltip">Dieser Dozent wurde nicht auf der offiziellen Seite aller Dozenten des FB2 an der HWR gefunden. Sollten Sie Informationen über den Titel oder die E-Mail-Adresse des Dozenten haben, bitte senden Sie eine Mail an hwr.stundenplan.dev@gmail.com</div>
+      //   </div>`;
+      // }
+      
       return `<div class="event-item${typeClass}" style="top:${top}px;height:${height}px;">${pillTag}<div class="event-item-time">${formatTime(ev.start)} – ${formatTime(ev.end)}</div><div class="event-item-title">${stripTitlePrefix(ev.title)}</div>${location}${teacher}</div>`;
     }).join('');
 
@@ -535,7 +993,7 @@ function renderDesktopSchedule(grouped, weekDays, isInitialLoad) {
   }
 }
 
-function renderMobileSchedule(grouped, weekDays, isInitialLoad) {
+function renderMobileSchedule(grouped, weekDays, isInitialLoad, lecturerDb) {
   const scheduleContainer = document.getElementById('scheduleContainerMobile');
   if (!scheduleContainer) return;
 
@@ -581,7 +1039,7 @@ function renderMobileSchedule(grouped, weekDays, isInitialLoad) {
       const isAsync = !isExam && !isOnline && (/asynchron/.test(notes) || /asynchrone lehre/.test(notes));
       const location = ev.location ? `<div class="flex items-center gap-2 text-gray-500"><span class="material-symbols-outlined text-[18px]">meeting_room</span><span class="text-sm">${ev.location}${isAsync ? ' <span style="color: #7c3aed;">(asynchron)</span>' : ''}</span></div>` : '';
       const teacherText = ev.teacher || extractTeacherFromDescription(ev.rawDescription || '');
-      const teacher = teacherText ? `<div class="flex items-center gap-2 text-gray-500 col-span-2"><span class="material-symbols-outlined text-[18px]">person</span><span class="text-sm">${formatTeacherName(teacherText)}</span></div>` : '';
+      const teacher = teacherText ? `<div class="flex items-center gap-2 text-gray-500 col-span-2"><span class="material-symbols-outlined text-[18px]">person</span><span class="text-sm">${formatTeacherName(teacherText, lecturerDb)}</span></div>` : '';
       let typeLabel = 'V';
       let typeColorClass = 'bg-blue-50 text-[#002551]';
       if (isExam) {
@@ -597,6 +1055,16 @@ function renderMobileSchedule(grouped, weekDays, isInitialLoad) {
 
       const borderColor = isExam ? 'border-red-600' : isOnline ? 'border-green-600' : isAsync ? 'border-purple-600' : 'border-[#003a79]';
       const typeClass = isExam ? ' exam' : isOnline ? ' online' : isAsync ? ' async' : '';
+
+      // Check if lecturer is not in reference list and add warning icon
+      // let warningIcon = '';
+      // const isSpecialCase = teacherText && teacherText.toLowerCase() === 'pause';
+      // if (teacherText && !isLecturerInReferenceList(teacherText) && !isSpecialCase) {
+      //   warningIcon = `<div class="lecturer-warning-icon">
+      //     <span class="material-symbols-outlined">warning</span>
+      //     <div class="lecturer-warning-tooltip">Dieser Dozent wurde nicht auf der offiziellen Seite aller Dozenten des FB2 an der HWR gefunden. Sollten Sie Informationen über den Titel oder die E-Mail-Adresse des Dozenten haben, bitte senden Sie eine Mail an hwr.stundenplan.dev@gmail.com</div>
+      //   </div>`;
+      // }
 
       return `
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex transition-all active:scale-[0.98] event-card${typeClass}">
@@ -808,7 +1276,7 @@ function deleteCookie(name) {
   setCookie(name, '', -1);
 }
 
-function generateICS(events, weekStart) {
+function generateICS(events, weekStart, data) {
   const weekEnd = addDays(weekStart, 4);
   const icsLines = [
     'BEGIN:VCALENDAR',
@@ -820,6 +1288,9 @@ function generateICS(events, weekStart) {
     'X-WR-TIMEZONE:Europe/Berlin',
     'X-WR-CALDESC:Exportierter Stundenplan von HWR Berlin'
   ];
+
+  // Build lecturer database from all events
+  const lecturerDb = data ? buildLecturerDatabase(data.events) : null;
 
   events.forEach(event => {
     const startDate = new Date(event.start);
@@ -833,7 +1304,7 @@ function generateICS(events, weekStart) {
     const title = stripTitlePrefix(event.title || '').replace(/,/g, '\\,');
     const location = (event.location || '').replace(/,/g, '\\,');
     const teacherText = event.teacher || extractTeacherFromDescription(event.rawDescription || '');
-    const teacher = formatTeacherName(teacherText).replace(/,/g, '\\,');
+    const teacher = formatTeacherName(teacherText, lecturerDb).replace(/,/g, '\\,');
     const description = `Dozent: ${teacher}\\nRaum: ${location}`.replace(/,/g, '\\,');
 
     icsLines.push('BEGIN:VEVENT');
@@ -1257,6 +1728,8 @@ function renderFavoritesList(data) {
   renderList(favoritesListMobilePanel);
 }
 
+
+
 async function init() {
   renderSkeletonLoader();
   
@@ -1287,6 +1760,7 @@ async function init() {
     const nextButton = document.getElementById('nextWeek');
     const resetButton = document.getElementById('resetCache');
     const exportButton = document.getElementById('exportCalendar');
+    const showAllEventsButton = document.getElementById('showAllEvents');
     const searchInput = document.getElementById('searchInput');
     const clearSearchButton = document.getElementById('clearSearch');
     const toggleButton = document.getElementById('toggleFilterButton');
@@ -1303,6 +1777,7 @@ async function init() {
     const prevButtonMobile = document.getElementById('prevWeekMobile');
     const nextButtonMobile = document.getElementById('nextWeekMobile');
     const resetButtonMobile = document.getElementById('resetCacheMobile');
+    const showAllEventsButtonMobile = document.getElementById('showAllEventsMobile');
     const currentWeekButton = document.getElementById('currentWeek');
     const searchInputMobile = document.getElementById('searchInputMobile');
     const clearSearchButtonMobile = document.getElementById('clearSearchMobile');
@@ -1319,6 +1794,15 @@ async function init() {
     let currentWeekStart = getMonday(new Date());
     let activeSource = null;
     let searchQuery = '';
+
+    // Load showAllEvents preference from localStorage
+    showAllEvents = localStorage.getItem(SHOW_ALL_EVENTS_KEY) === 'true';
+
+    // Initialize button visual state
+    if (showAllEvents) {
+      if (showAllEventsButton) showAllEventsButton.classList.add('progress-active');
+      if (showAllEventsButtonMobile) showAllEventsButtonMobile.classList.add('progress-active');
+    }
 
     const semesterOptions = Array.from({ length: maxSemester }, (_, index) => `semester${index + 1}`);
     
@@ -1551,7 +2035,22 @@ async function init() {
 
     if (facultySelect) {
       facultySelect.addEventListener('change', () => {
+        // Store current course letter before repopulating
+        const currentCourseId = courseSelect.value;
+        const currentCourseLetter = currentCourseId.slice(-1); // Get last character (e.g., 'a', 'b', 'c')
+        
         populateCourses(courseSelect, semesterSelect, facultySelect, data);
+        updateCourseDropdown();
+        
+        // Try to select the same course letter in the new faculty
+        const matchingCourse = Array.from(courseSelect.options).find(opt => opt.value && opt.value.slice(-1) === currentCourseLetter);
+        if (matchingCourse) {
+          courseSelect.value = matchingCourse.value;
+          activeSource = matchingCourse.value;
+          updateCourseDropdown(); // Update desktop display
+          updateCourseDropdownMobile(); // Update mobile display
+        }
+        
         syncSelects(facultySelect, facultySelectMobile);
         syncSelects(courseSelect, courseSelectMobile);
         saveSelection();
@@ -1605,9 +2104,57 @@ async function init() {
           alert('Keine Veranstaltungen zum Exportieren gefunden.');
           return;
         }
-        const icsContent = generateICS(events, currentWeekStart);
+        const icsContent = generateICS(events, currentWeekStart, data);
         const filename = `hwr-stundenplan-${formatDateShort(currentWeekStart)}.ics`;
         downloadICS(icsContent, filename);
+      });
+    }
+
+
+
+    if (showAllEventsButton) {
+      showAllEventsButton.addEventListener('click', () => {
+        showAllEvents = !showAllEvents;
+        localStorage.setItem(SHOW_ALL_EVENTS_KEY, String(showAllEvents));
+        if (showAllEvents) {
+          showAllEventsButton.classList.add('progress-active');
+          if (showAllEventsButtonMobile) showAllEventsButtonMobile.classList.add('progress-active');
+        } else {
+          showAllEventsButton.classList.remove('progress-active');
+          if (showAllEventsButtonMobile) showAllEventsButtonMobile.classList.remove('progress-active');
+        }
+        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+      });
+    }
+
+    if (showAllEventsButtonMobile) {
+      showAllEventsButtonMobile.addEventListener('click', () => {
+        showAllEvents = !showAllEvents;
+        localStorage.setItem(SHOW_ALL_EVENTS_KEY, String(showAllEvents));
+        if (showAllEvents) {
+          showAllEventsButtonMobile.classList.add('progress-active');
+          if (showAllEventsButton) showAllEventsButton.classList.add('progress-active');
+        } else {
+          showAllEventsButtonMobile.classList.remove('progress-active');
+          if (showAllEventsButton) showAllEventsButton.classList.remove('progress-active');
+        }
+        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+      });
+    }
+
+    // Dozentenplan button - desktop
+    const dozentenplanButton = document.getElementById('dozentenplanButton');
+    if (dozentenplanButton) {
+      dozentenplanButton.addEventListener('click', () => {
+        window.location.href = 'dozentenplan.html';
+      });
+    }
+
+    // Dozentenplan button - mobile
+    const dozentenplanButtonMobile = document.getElementById('dozentenplanButtonMobile');
+    if (dozentenplanButtonMobile) {
+      dozentenplanButtonMobile.addEventListener('click', () => {
+        window.location.href = 'dozentenplan.html';
       });
     }
 
@@ -1869,7 +2416,22 @@ async function init() {
 
     if (facultySelectMobile) {
       facultySelectMobile.addEventListener('change', () => {
+        // Store current course letter before repopulating
+        const currentCourseId = courseSelectMobile.value;
+        const currentCourseLetter = currentCourseId.slice(-1); // Get last character (e.g., 'a', 'b', 'c')
+        
         populateCourses(courseSelectMobile, semesterSelectMobile, facultySelectMobile, data);
+        updateCourseDropdownMobile();
+        
+        // Try to select the same course letter in the new faculty
+        const matchingCourse = Array.from(courseSelectMobile.options).find(opt => opt.value && opt.value.slice(-1) === currentCourseLetter);
+        if (matchingCourse) {
+          courseSelectMobile.value = matchingCourse.value;
+          activeSource = matchingCourse.value;
+          updateCourseDropdownMobile(); // Update mobile display
+          updateCourseDropdown(); // Update desktop display
+        }
+        
         syncSelects(facultySelectMobile, facultySelect);
         syncSelects(courseSelectMobile, courseSelect);
         saveSelection();

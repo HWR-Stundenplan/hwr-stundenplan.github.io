@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HWR Berlin Dozentenplan – Mobil & Schnell</title>
+  <meta name="description" content="Der Dozentenplan für die HWR Berlin. Sieh die Veranstaltungen eines Dozenten auf einen Blick optimiert fürs Smartphone.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-950">
+  <div class="min-h-screen">
+    <!-- Desktop Header -->
+    <div class="hidden md:block bg-[#001a3d]/70 backdrop-blur-3xl border-b border-white/10 text-white">
+      <div class="mx-auto flex max-w-[1480px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-4">
+          <div class="relative w-16 h-16 overflow-hidden rounded-3xl">
+            <img src="logo.png" alt="Logo" class="absolute w-16 h-16 object-contain">
+            <div class="absolute inset-0 bg-white/10 rounded-3xl border border-white/30 shadow-2xl"></div>
+          </div>
+          <div class="flex items-center gap-3">
+            <h1 class="text-3xl font-bold tracking-tight">Dozentenplan</h1>
+            <a href="index.html" class="text-sm text-white/70 hover:text-white transition">← Zurück zum Stundenplan</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Header -->
+    <header class="md:hidden fixed top-0 right-0 left-0 z-50 flex justify-between items-center px-6 h-16 bg-white/60 backdrop-blur-xl border-b border-white/20">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-white/80 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/50">
+          <img src="logo.png" alt="Logo" class="w-7 h-7 object-contain">
+        </div>
+        <span class="text-xl font-bold text-[#002551] tracking-tight">Dozentenplan</span>
+      </div>
+      <a href="index.html" class="text-sm text-[#002551] hover:text-[#003366] transition">← Zurück</a>
+    </header>
+
+    <!-- Desktop Main -->
+    <main class="hidden md:block mx-auto max-w-[1480px] px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+      <section id="pageLayout" class="grid gap-6">
+        <div class="space-y-4 rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Dozentensuche</p>
+              <h3 class="mt-2 text-xl font-semibold text-slate-950">Dozent auswählen</h3>
+            </div>
+          </div>
+          <div class="search-bar-container relative">
+            <div class="relative">
+              <span class="material-symbols-outlined search-icon">search</span>
+              <input id="lecturerSearchInput" type="text" placeholder="Dozent suchen..." class="search-input" autocomplete="off">
+              <button id="clearLecturerSearch" class="clear-search" type="button" style="display: none;">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+              <div id="lecturerSuggestions" class="lecturer-suggestions hidden"></div>
+            </div>
+          </div>
+          <div id="selectedLecturerDisplay" class="hidden">
+            <div class="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200">
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-blue-600">person</span>
+                <div>
+                  <p class="text-sm font-medium text-slate-700">Ausgewählter Dozent:</p>
+                  <p id="selectedLecturerName" class="text-lg font-semibold text-[#002551]"></p>
+                </div>
+              </div>
+              <button id="clearLecturerSelection" class="text-slate-500 hover:text-slate-700 transition">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4 rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Wochenansicht</p>
+              <h3 class="mt-2 text-xl font-semibold text-slate-950">Terminübersicht</h3>
+            </div>
+            <div class="date-range-selector">
+              <button id="prevWeek" class="nav-button" type="button"><span class="material-symbols-outlined">chevron_left</span></button>
+              <div class="date-range-content">
+                <span class="material-symbols-outlined calendar-icon">calendar_month</span>
+                <span id="dateRangeLabel" class="date-range-text">03. Juni - 09. Juni 2024</span>
+                <span id="weekBadge" class="week-badge">KW 23</span>
+              </div>
+              <button id="nextWeek" class="nav-button" type="button"><span class="material-symbols-outlined">chevron_right</span></button>
+            </div>
+          </div>
+          <div class="schedule-table-container scrollbar-thin">
+            <div class="schedule-grid-wrapper">
+              <div class="time-column" id="timeColumn"></div>
+              <div class="days-grid" id="daysGrid"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Mobile Main -->
+    <main class="md:hidden pt-20 pb-10 px-4 min-h-screen max-w-md mx-auto bg-slate-50">
+      <!-- Lecturer Search -->
+      <div id="lecturerSearchContainerMobile" class="mb-6 relative">
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+          <input id="lecturerSearchInputMobile" type="text" placeholder="Dozent suchen..." class="w-full rounded-lg border border-gray-300 bg-white pl-10 pr-10 py-3 text-sm text-gray-900 focus:border-[#002551] focus:outline-none focus:ring-1 focus:ring-[#002551]" autocomplete="off">
+          <button id="clearLecturerSearchMobile" class="absolute right-3 top-1/2 -translate-y-1/2 hidden rounded-lg p-1 text-gray-400 hover:bg-gray-100">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+          <div id="lecturerSuggestionsMobile" class="lecturer-suggestions-mobile hidden"></div>
+        </div>
+      </div>
+
+      <!-- Selected Lecturer Display -->
+      <div id="selectedLecturerDisplayMobile" class="hidden mb-6">
+        <div class="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-blue-600">person</span>
+            <div>
+              <p class="text-xs text-slate-600">Ausgewählt:</p>
+              <p id="selectedLecturerNameMobile" class="text-base font-semibold text-[#002551]"></p>
+            </div>
+          </div>
+          <button id="clearLecturerSelectionMobile" class="text-slate-500 hover:text-slate-700 transition">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Week Navigation -->
+      <div id="weekNavigationMobile" class="mb-6 flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+        <button id="prevWeekMobile" class="rounded-lg p-2 text-gray-600 hover:bg-gray-100">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <div class="text-center">
+          <div class="flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-gray-500">calendar_month</span>
+            <span id="dateRangeLabelMobile" class="text-sm font-semibold text-gray-900">03. Juni - 09. Juni 2024</span>
+          </div>
+          <span id="weekBadgeMobile" class="mt-1 inline-block rounded-full bg-[#002551] px-2 py-0.5 text-xs font-bold text-white">KW 23</span>
+        </div>
+        <button id="nextWeekMobile" class="rounded-lg p-2 text-gray-600 hover:bg-gray-100">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+
+      <!-- Schedule Container -->
+      <div id="scheduleContainerMobile" class="flex flex-col gap-6">
+        <!-- Days will be rendered here -->
+      </div>
+    </main>
+  </div>
+
+  <script src="dozentenplan.js"></script>
+</body>
+</html>
