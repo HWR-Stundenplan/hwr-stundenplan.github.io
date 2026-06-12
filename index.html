@@ -105,7 +105,7 @@
                 </div>
               </label>
               <label class="block">
-                <span class="mb-2 block text-sm font-medium text-slate-700">Fachbereich</span>
+                <span class="mb-2 block text-sm font-medium text-slate-700">Studiengang</span>
                 <div class="schanzen-dropdown" data-dropdown="faculty">
                   <div class="schanzen-dropdown-container">
                     <span class="schanzen-dropdown-value">Bitte wählen...</span>
@@ -187,6 +187,15 @@
               <div class="time-column" id="timeColumn"></div>
               <div class="days-grid" id="daysGrid"></div>
             </div>
+          </div>
+          <div class="week-navigation-bottom mt-6 flex items-center justify-center gap-4">
+            <button id="prevWeekBottom" class="nav-button" type="button"><span class="material-symbols-outlined">chevron_left</span></button>
+            <div class="date-range-content">
+              <span class="material-symbols-outlined calendar-icon">calendar_month</span>
+              <span id="dateRangeLabelBottom" class="date-range-text">03. Juni - 09. Juni 2024</span>
+              <span id="weekBadgeBottom" class="week-badge">KW 23</span>
+            </div>
+            <button id="nextWeekBottom" class="nav-button" type="button"><span class="material-symbols-outlined">chevron_right</span></button>
           </div>
         </div>
       </section>
@@ -274,7 +283,7 @@
               </div>
             </label>
             <label class="block">
-              <span class="mb-2 block text-xs font-medium text-gray-700">Fachbereich</span>
+              <span class="mb-2 block text-xs font-medium text-gray-700">Studiengang</span>
               <div class="schanzen-dropdown" data-dropdown="faculty-mobile">
                 <div class="schanzen-dropdown-container">
                   <span class="schanzen-dropdown-value">Bitte wählen...</span>
@@ -354,6 +363,23 @@
       <!-- Schedule Container -->
       <div id="scheduleContainerMobile" class="flex flex-col gap-6">
         <!-- Days will be rendered here -->
+      </div>
+
+      <!-- Week Navigation Bottom -->
+      <div class="mt-6 flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+        <button id="prevWeekMobileBottom" class="rounded-lg p-2 text-gray-600 hover:bg-gray-100">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <div class="text-center">
+          <div class="flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-gray-500">calendar_month</span>
+            <span id="dateRangeLabelMobileBottom" class="text-sm font-semibold text-gray-900">03. Juni - 09. Juni 2024</span>
+          </div>
+          <span id="weekBadgeMobileBottom" class="mt-1 inline-block rounded-full bg-[#002551] px-2 py-0.5 text-xs font-bold text-white">KW 23</span>
+        </div>
+        <button id="nextWeekMobileBottom" class="rounded-lg p-2 text-gray-600 hover:bg-gray-100">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
       </div>
 
     </main>

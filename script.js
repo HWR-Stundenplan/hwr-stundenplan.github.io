@@ -8,6 +8,16 @@ const PENDING_DELETE_KEY = 'st-plan-pending-delete';
 const DAILY_VISIT_KEY = 'st-plan-daily-visit';
 const SHOW_ALL_EVENTS_KEY = 'st-plan-show-all-events';
 const CACHE_EXPIRY_HOURS = 24;
+
+// Study program abbreviation mapping
+const STUDY_PROGRAMS = {
+  'wi': 'Wirtschaftsinformatik',
+  'dl': 'Dienstleistungsmanagement',
+  'fm': 'Facility Management',
+  'IBA': 'International Business Administration',
+  'ppm': 'Projekt- und Prozessmanagement',
+  'IP': 'Intellectual Property'
+};
 let filterCollapsed = false;
 let hasInitialScrollOccurred = false;
 let showProgressLabel = false;
@@ -597,6 +607,35 @@ function formatTeacherName(teacher, lecturerDb = null) {
     return teacher.split(',').map(t => t.trim()).filter(Boolean).join(', ');
   }
   
+  // Check if the teacher string is in "Nachname, Titel Vorname" format (single lecturer)
+  // If it contains a comma and the part after comma starts with a title, treat as single lecturer
+  const commaMatch = teacher.match(/^([^,]+),\s*(.+)$/);
+  if (commaMatch) {
+    const afterComma = commaMatch[2].trim();
+    const titleMatch = afterComma.match(/^(Prof\.?\s*|Dr\.?\s*)/i);
+    if (titleMatch) {
+      // Single lecturer in "Nachname, Titel Vorname" format
+      const parsed = parseLecturerName(teacher);
+      if (!parsed) return teacher;
+      
+      const lastName = parsed.lastName.toLowerCase();
+      const lecturersWithSameLastName = lecturerDb.get(lastName);
+      
+      if (lecturersWithSameLastName && lecturersWithSameLastName.length > 0) {
+        const lecturerData = lecturersWithSameLastName[0];
+        if (lecturerData.title) {
+          return `${lecturerData.title} ${lecturerData.lastName}`.trim();
+        }
+        return lecturerData.lastName;
+      }
+      
+      if (parsed.title) {
+        return `${parsed.title} ${parsed.lastName}`.trim();
+      }
+      return parsed.lastName;
+    }
+  }
+  
   // Handle multiple teachers separated by comma
   const teachers = teacher.split(',').map(t => t.trim()).filter(Boolean);
   
@@ -612,7 +651,7 @@ function formatTeacherName(teacher, lecturerDb = null) {
       // Use the first matching lecturer's data (which has the correct title)
       const lecturerData = lecturersWithSameLastName[0];
       
-      // Always show title if we have one from the reference list
+      // Always show title if we have one from the reference list (never show first name)
       if (lecturerData.title) {
         return `${lecturerData.title} ${lecturerData.lastName}`.trim();
       }
@@ -621,7 +660,7 @@ function formatTeacherName(teacher, lecturerDb = null) {
       return lecturerData.lastName;
     }
     
-    // Fallback: use parsed data if not found in database
+    // Fallback: use parsed data if not found in database (never show first name)
     if (parsed.title) {
       return `${parsed.title} ${parsed.lastName}`.trim();
     }
@@ -851,6 +890,10 @@ function renderSchedule(data, selectedSource, referenceDate, searchQuery = '', i
   const dateRangeLabelMobile = document.getElementById('dateRangeLabelMobile');
   const weekBadge = document.getElementById('weekBadge');
   const weekBadgeMobile = document.getElementById('weekBadgeMobile');
+  const dateRangeLabelBottom = document.getElementById('dateRangeLabelBottom');
+  const dateRangeLabelMobileBottom = document.getElementById('dateRangeLabelMobileBottom');
+  const weekBadgeBottom = document.getElementById('weekBadgeBottom');
+  const weekBadgeMobileBottom = document.getElementById('weekBadgeMobileBottom');
   
   if (dateRangeLabel) {
     dateRangeLabel.textContent = formatDateRange(weekStart);
@@ -863,6 +906,18 @@ function renderSchedule(data, selectedSource, referenceDate, searchQuery = '', i
   }
   if (weekBadgeMobile) {
     weekBadgeMobile.textContent = `KW ${String(getWeekNumber(weekStart)).padStart(2, '0')}`;
+  }
+  if (dateRangeLabelBottom) {
+    dateRangeLabelBottom.textContent = formatDateRange(weekStart);
+  }
+  if (dateRangeLabelMobileBottom) {
+    dateRangeLabelMobileBottom.textContent = formatDateRange(weekStart);
+  }
+  if (weekBadgeBottom) {
+    weekBadgeBottom.textContent = `KW ${String(getWeekNumber(weekStart)).padStart(2, '0')}`;
+  }
+  if (weekBadgeMobileBottom) {
+    weekBadgeMobileBottom.textContent = `KW ${String(getWeekNumber(weekStart)).padStart(2, '0')}`;
   }
   
   const saturdayKey = getLocalDateKey(addDays(weekStart, 5));
@@ -1594,9 +1649,34 @@ function populateFaculties(semesterSelect, facultySelect, data) {
   const sem = semesterSelect.value;
   console.log('populateFaculties called with semester:', sem);
   const schedules = data.schedules || [];
-  const faculties = Array.from(new Set(schedules.filter((schedule) => schedule.semester === sem).map((schedule) => schedule.faculty).filter(Boolean))).sort();
-  console.log('Faculties found:', faculties);
-  facultySelect.innerHTML = faculties.length ? faculties.map((faculty) => `<option value="${faculty}">${faculty}</option>`).join('') : '<option value="">Keine Fachrichtung verfügbar</option>';
+  const faculties = Array.from(new Set(schedules.filter((schedule) => schedule.semester === sem).map((schedule) => schedule.faculty).filter(Boolean)));
+  
+  // Map faculties to study programs and sort alphabetically by full name
+  const sortedFaculties = faculties.map(faculty => {
+    const lowerFaculty = faculty.toLowerCase();
+    // Find matching study program by abbreviation
+    const matchedKey = Object.keys(STUDY_PROGRAMS).find(key => key.toLowerCase() === lowerFaculty);
+    if (matchedKey) {
+      return {
+        value: faculty,
+        abbreviation: matchedKey,
+        fullName: STUDY_PROGRAMS[matchedKey]
+      };
+    }
+    // Fallback for unknown faculties
+    return {
+      value: faculty,
+      abbreviation: null,
+      fullName: faculty
+    };
+  }).sort((a, b) => a.fullName.localeCompare(b.fullName, 'de-DE'));
+  
+  console.log('Sorted faculties:', sortedFaculties);
+  
+  // Generate options with full name only (abbreviation used only for responsive fallback)
+  facultySelect.innerHTML = sortedFaculties.length 
+    ? sortedFaculties.map(f => `<option value="${f.value}" data-abbreviation="${f.abbreviation || ''}" data-fullname="${f.fullName}">${f.fullName}</option>`).join('')
+    : '<option value="">Keine Fachrichtung verfügbar</option>';
   console.log('Faculty select innerHTML set');
 }
 
@@ -1758,6 +1838,8 @@ async function init() {
     const courseSelect = document.getElementById('courseSelect');
     const prevButton = document.getElementById('prevWeek');
     const nextButton = document.getElementById('nextWeek');
+    const prevButtonBottom = document.getElementById('prevWeekBottom');
+    const nextButtonBottom = document.getElementById('nextWeekBottom');
     const resetButton = document.getElementById('resetCache');
     const exportButton = document.getElementById('exportCalendar');
     const showAllEventsButton = document.getElementById('showAllEvents');
@@ -1776,6 +1858,8 @@ async function init() {
     const courseSelectMobile = document.getElementById('courseSelectMobile');
     const prevButtonMobile = document.getElementById('prevWeekMobile');
     const nextButtonMobile = document.getElementById('nextWeekMobile');
+    const prevButtonMobileBottom = document.getElementById('prevWeekMobileBottom');
+    const nextButtonMobileBottom = document.getElementById('nextWeekMobileBottom');
     const resetButtonMobile = document.getElementById('resetCacheMobile');
     const showAllEventsButtonMobile = document.getElementById('showAllEventsMobile');
     const currentWeekButton = document.getElementById('currentWeek');
@@ -1839,19 +1923,43 @@ async function init() {
         return;
       }
 
+      // Check if this is a faculty dropdown (study programs)
+      const isFacultyDropdown = dropdownId.includes('faculty');
+
       // Update options when select changes
       function updateOptions() {
         const options = Array.from(select.options).map(opt => ({
           value: opt.value,
           text: opt.textContent,
+          abbreviation: opt.dataset.abbreviation || '',
+          fullName: opt.dataset.fullname || opt.textContent,
           selected: opt.selected
         }));
 
-        optionsContainer.innerHTML = options.map(opt => `
-          <button class="schanzen-dropdown-option ${opt.selected ? 'selected' : ''}" data-value="${opt.value}">
-            ${opt.text}
-          </button>
-        `).join('');
+        optionsContainer.innerHTML = options.map(opt => {
+          if (isFacultyDropdown && opt.abbreviation && opt.fullName && opt.abbreviation !== opt.fullName) {
+            // Study program option with full name by default, abbreviation + info icon on small screens
+            // Add line break for "Dienstleistungsmanagement" in tooltip
+            const tooltipName = opt.fullName === 'Dienstleistungsmanagement' ? 'Dienstleistungs-<br>management' : opt.fullName;
+            return `
+              <button class="schanzen-dropdown-option ${opt.selected ? 'selected' : ''}" data-value="${opt.value}">
+                <span class="study-program-full">${opt.fullName}</span>
+                <span class="study-program-abbreviated">${opt.abbreviation}</span>
+                <span class="study-program-info-icon">
+                  <span class="material-symbols-outlined">info</span>
+                  <span class="study-program-tooltip">${tooltipName}</span>
+                </span>
+              </button>
+            `;
+          } else {
+            // Regular option (no abbreviation)
+            return `
+              <button class="schanzen-dropdown-option ${opt.selected ? 'selected' : ''}" data-value="${opt.value}">
+                ${opt.text}
+              </button>
+            `;
+          }
+        }).join('');
 
         // Update display value
         const selectedOption = select.options[select.selectedIndex];
@@ -1904,6 +2012,49 @@ async function init() {
             optionsContainer.style.maxHeight = 'none';
           }
           console.log('[Dropdown] Opened dropdown, classes:', dropdown.className);
+
+          // Check for overflow after dropdown is opened (elements are now visible)
+          if (isFacultyDropdown) {
+            setTimeout(() => {
+              console.log('[Study Program] Checking overflow after dropdown opened');
+              const studyProgramOptions = optionsContainer.querySelectorAll('.schanzen-dropdown-option');
+              studyProgramOptions.forEach(option => {
+                const fullNameSpan = option.querySelector('.study-program-full');
+                if (fullNameSpan) {
+                  const scrollWidth = fullNameSpan.scrollWidth;
+                  const clientWidth = fullNameSpan.clientWidth;
+                  console.log('[Study Program] Option:', fullNameSpan.textContent, 'scrollWidth:', scrollWidth, 'clientWidth:', clientWidth);
+                  if (scrollWidth > clientWidth) {
+                    option.classList.add('too-narrow');
+                    console.log('[Study Program] Added too-narrow class to:', fullNameSpan.textContent);
+                  } else {
+                    option.classList.remove('too-narrow');
+                  }
+                }
+              });
+
+              // Setup tooltip positioning for info icons
+              const infoIcons = optionsContainer.querySelectorAll('.study-program-info-icon');
+              infoIcons.forEach(icon => {
+                icon.addEventListener('mouseenter', () => {
+                  const tooltip = icon.querySelector('.study-program-tooltip');
+                  if (!tooltip) return;
+
+                  const iconRect = icon.getBoundingClientRect();
+                  const tooltipRect = tooltip.getBoundingClientRect();
+                  const spaceAbove = iconRect.top;
+                  const spaceBelow = window.innerHeight - iconRect.bottom;
+
+                  // If not enough space above, position below
+                  if (spaceAbove < tooltipRect.height + 20) {
+                    tooltip.classList.add('tooltip-below');
+                  } else {
+                    tooltip.classList.remove('tooltip-below');
+                  }
+                });
+              });
+            }, 50);
+          }
         }
       }
 
@@ -1976,6 +2127,31 @@ async function init() {
     const updateSemesterDropdownMobile = initializeSchanzenDropdown('semester-mobile', 'semesterSelectMobile', 'semesterOptionsMobile');
     const updateFacultyDropdownMobile = initializeSchanzenDropdown('faculty-mobile', 'facultySelectMobile', 'facultyOptionsMobile');
     const updateCourseDropdownMobile = initializeSchanzenDropdown('course-mobile', 'courseSelectMobile', 'courseOptionsMobile');
+
+    // Handle window resize to recheck overflow for study programs
+    let studyProgramResizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(studyProgramResizeTimeout);
+      studyProgramResizeTimeout = setTimeout(() => {
+        const allFacultyDropdowns = document.querySelectorAll('.schanzen-dropdown[data-dropdown="faculty"], .schanzen-dropdown[data-dropdown="faculty-mobile"]');
+        allFacultyDropdowns.forEach(dropdown => {
+          const optionsContainer = dropdown.querySelector('.schanzen-dropdown-options');
+          if (optionsContainer) {
+            const studyProgramOptions = optionsContainer.querySelectorAll('.schanzen-dropdown-option');
+            studyProgramOptions.forEach(option => {
+              const fullNameSpan = option.querySelector('.study-program-full');
+              if (fullNameSpan) {
+                if (fullNameSpan.scrollWidth > fullNameSpan.clientWidth) {
+                  option.classList.add('too-narrow');
+                } else {
+                  option.classList.remove('too-narrow');
+                }
+              }
+            });
+          }
+        });
+      }, 100);
+    });
 
     function syncSelects(sourceSelect, targetSelect) {
       if (sourceSelect && targetSelect) {
@@ -2078,6 +2254,20 @@ async function init() {
 
     if (nextButton) {
       nextButton.addEventListener('click', () => {
+        currentWeekStart = addDays(currentWeekStart, 7);
+        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+      });
+    }
+
+    if (prevButtonBottom) {
+      prevButtonBottom.addEventListener('click', () => {
+        currentWeekStart = addDays(currentWeekStart, -7);
+        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+      });
+    }
+
+    if (nextButtonBottom) {
+      nextButtonBottom.addEventListener('click', () => {
         currentWeekStart = addDays(currentWeekStart, 7);
         renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
       });
@@ -2455,10 +2645,44 @@ async function init() {
         currentWeekStart = addDays(currentWeekStart, -7);
         renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
       });
+      prevButtonMobile.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        currentWeekStart = addDays(currentWeekStart, -7);
+        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+      });
     }
 
     if (nextButtonMobile) {
       nextButtonMobile.addEventListener('click', () => {
+        currentWeekStart = addDays(currentWeekStart, 7);
+        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+      });
+      nextButtonMobile.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        currentWeekStart = addDays(currentWeekStart, 7);
+        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+      });
+    }
+
+    if (prevButtonMobileBottom) {
+      prevButtonMobileBottom.addEventListener('click', () => {
+        currentWeekStart = addDays(currentWeekStart, -7);
+        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+      });
+      prevButtonMobileBottom.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        currentWeekStart = addDays(currentWeekStart, -7);
+        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+      });
+    }
+
+    if (nextButtonMobileBottom) {
+      nextButtonMobileBottom.addEventListener('click', () => {
+        currentWeekStart = addDays(currentWeekStart, 7);
+        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+      });
+      nextButtonMobileBottom.addEventListener('touchend', (e) => {
+        e.preventDefault();
         currentWeekStart = addDays(currentWeekStart, 7);
         renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
       });
