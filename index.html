@@ -12,10 +12,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-slate-50 text-slate-950">
+<body class="bg-slate-50 text-slate-950" style="background: var(--bg-primary); color: var(--text-primary);">
   <div class="min-h-screen">
     <!-- Desktop Header -->
-    <div class="hidden md:block bg-[#001a3d]/70 backdrop-blur-3xl border-b border-white/10 text-white">
+    <div class="hidden md:block backdrop-blur-3xl border-b" style="background: var(--header-bg); border-color: var(--border-color); color: var(--header-text);">
       <div class="mx-auto flex max-w-[1480px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-4">
           <div class="relative w-16 h-16 overflow-hidden rounded-3xl">
@@ -24,17 +24,23 @@
           </div>
           <h1 class="text-3xl font-bold tracking-tight">Kursübersicht</h1>
         </div>
+        <button id="darkModeToggleDesktop" class="dark-mode-toggle" type="button" aria-label="Dark Mode umschalten">
+          <span class="material-symbols-outlined">dark_mode</span>
+        </button>
       </div>
     </div>
 
     <!-- Mobile Header -->
-    <header class="md:hidden fixed top-0 right-0 left-0 z-50 flex justify-between items-center px-6 h-16 bg-white/60 backdrop-blur-xl border-b border-white/20">
+    <header class="md:hidden fixed top-0 right-0 left-0 z-50 flex justify-between items-center px-6 h-16 backdrop-blur-xl border-b" style="background: var(--bg-secondary); border-color: var(--border-color);">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-white/80 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/50">
+        <div class="w-10 h-10 backdrop-blur-md rounded-2xl flex items-center justify-center border" style="background: var(--bg-secondary); border-color: var(--border-color);">
           <img src="logo.png" alt="Logo" class="w-7 h-7 object-contain">
         </div>
-        <span class="text-xl font-bold text-[#002551] tracking-tight">Kursübersicht</span>
+        <span class="text-xl font-bold tracking-tight" style="color: var(--text-primary);">Kursübersicht</span>
       </div>
+      <button id="darkModeToggleMobile" class="dark-mode-toggle" type="button" aria-label="Dark Mode umschalten">
+        <span class="material-symbols-outlined">dark_mode</span>
+      </button>
     </header>
 
     <!-- Desktop Main -->
@@ -134,11 +140,10 @@
                   <div class="schanzen-dropdown-container">
                     <span class="schanzen-dropdown-value">Bitte wählen...</span>
                     <div class="schanzen-overlay">
-                     <svg viewBox="0 0 327 64" preserveAspectRatio="none">
-  <path class="surface-path" 
-        d="M 0 60 C 100 60, 150 5, 327 5 L 327 64 L 0 64 Z" 
-        fill="#ffffff"/>
-</svg>
+                      <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
+                        <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
+                        <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                      </svg>
                       <div class="schanzen-icon-surface">
                         <svg viewBox="0 0 327 64" preserveAspectRatio="none">
                           <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
@@ -202,7 +207,7 @@
     </main>
 
     <!-- Mobile Main -->
-    <main class="md:hidden pt-20 pb-10 px-4 min-h-screen max-w-md mx-auto bg-slate-50">
+    <main class="md:hidden pt-20 pb-10 px-4 min-h-screen max-w-md mx-auto" style="background: var(--bg-primary);">
       
       <!-- Filter Toggle Button (positioned outside collapsible content) -->
       <div id="mobileFilterButtonContainer" class="mb-6">

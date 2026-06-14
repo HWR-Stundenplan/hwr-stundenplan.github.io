@@ -7,6 +7,7 @@ const FAVORITES_KEY = 'st-plan-favorites';
 const PENDING_DELETE_KEY = 'st-plan-pending-delete';
 const DAILY_VISIT_KEY = 'st-plan-daily-visit';
 const SHOW_ALL_EVENTS_KEY = 'st-plan-show-all-events';
+const DARK_MODE_KEY = 'st-plan-dark-mode';
 const CACHE_EXPIRY_HOURS = 24;
 
 // Study program abbreviation mapping
@@ -23,6 +24,7 @@ let hasInitialScrollOccurred = false;
 let showProgressLabel = false;
 let shouldAnimateProgress = false;
 let showAllEvents = false;
+let isDarkMode = false;
 
 function hasVisitedToday() {
   const todayKey = getLocalDateKey(new Date());
@@ -86,6 +88,48 @@ function getInitialFilterCollapsed() {
   }
 
   return true;
+}
+
+function initializeDarkMode() {
+  const savedDarkMode = localStorage.getItem(DARK_MODE_KEY);
+  
+  if (savedDarkMode !== null) {
+    isDarkMode = savedDarkMode === 'true';
+  } else {
+    // If no saved preference, use system preference
+    isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  
+  applyDarkMode();
+}
+
+function toggleDarkMode() {
+  isDarkMode = !isDarkMode;
+  localStorage.setItem(DARK_MODE_KEY, String(isDarkMode));
+  applyDarkMode();
+}
+
+function applyDarkMode() {
+  const html = document.documentElement;
+  const desktopToggle = document.getElementById('darkModeToggleDesktop');
+  const mobileToggle = document.getElementById('darkModeToggleMobile');
+  
+  if (isDarkMode) {
+    html.classList.add('dark');
+  } else {
+    html.classList.remove('dark');
+  }
+  
+  // Update button icons
+  const icon = isDarkMode ? 'light_mode' : 'dark_mode';
+  
+  if (desktopToggle) {
+    desktopToggle.querySelector('.material-symbols-outlined').textContent = icon;
+  }
+  
+  if (mobileToggle) {
+    mobileToggle.querySelector('.material-symbols-outlined').textContent = icon;
+  }
 }
 
 function cacheScheduleData(data) {
@@ -986,13 +1030,17 @@ function renderDesktopSchedule(grouped, weekDays, isInitialLoad, lecturerDb) {
       const isExam = /klausur(?!\s*vorbereitung)/.test(notes);
       const isOnline = !isExam && (/online/.test(notes) || ev.online);
       const isAsync = !isExam && !isOnline && (/asynchron/.test(notes) || /asynchrone lehre/.test(notes));
-      const location = ev.location ? `<div class="event-item-meta"><span class="material-symbols-outlined" style="font-size: 0.9rem;">location_on</span> ${ev.location}${isAsync ? ' <span style="color: #7c3aed;">(asynchron)</span>' : ''}</div>` : '';
       const teacherText = ev.teacher || extractTeacherFromDescription(ev.rawDescription || '');
-      const teacher = teacherText ? `<div class="event-item-meta"><span class="material-symbols-outlined" style="font-size: 0.9rem;">person</span> ${formatTeacherName(teacherText, lecturerDb)}</div>` : '';
-      const typeClass = isExam ? ' exam' : isOnline ? ' online' : isAsync ? ' async' : '';
+      const isWegzeit = teacherText && teacherText.toLowerCase() === 'wegzeit';
+      const location = ev.location && !isWegzeit ? `<div class="event-item-meta"><span class="material-symbols-outlined" style="font-size: 0.9rem;">location_on</span> ${ev.location}${isAsync ? ' <span style="color: #7c3aed;">(asynchron)</span>' : ''}</div>` : '';
+      const teacher = teacherText && !isWegzeit ? `<div class="event-item-meta"><span class="material-symbols-outlined" style="font-size: 0.9rem;">person</span> ${formatTeacherName(teacherText, lecturerDb)}</div>` : '';
+      const typeClass = isWegzeit ? ' wegzeit' : isExam ? ' exam' : isOnline ? ' online' : isAsync ? ' async' : '';
       let typeLabel = 'Vorlesung';
       let pillColorClass = 'pill-blue';
-      if (isExam) {
+      if (isWegzeit) {
+        typeLabel = 'Wegzeit';
+        pillColorClass = 'pill-green';
+      } else if (isExam) {
         typeLabel = 'Klausur';
         pillColorClass = 'pill-red';
       } else if (isOnline) {
@@ -1092,12 +1140,16 @@ function renderMobileSchedule(grouped, weekDays, isInitialLoad, lecturerDb) {
       const isExam = /klausur(?!\s*vorbereitung)/.test(notes);
       const isOnline = !isExam && (/online/.test(notes) || ev.online);
       const isAsync = !isExam && !isOnline && (/asynchron/.test(notes) || /asynchrone lehre/.test(notes));
-      const location = ev.location ? `<div class="flex items-center gap-2 text-gray-500"><span class="material-symbols-outlined text-[18px]">meeting_room</span><span class="text-sm">${ev.location}${isAsync ? ' <span style="color: #7c3aed;">(asynchron)</span>' : ''}</span></div>` : '';
       const teacherText = ev.teacher || extractTeacherFromDescription(ev.rawDescription || '');
-      const teacher = teacherText ? `<div class="flex items-center gap-2 text-gray-500 col-span-2"><span class="material-symbols-outlined text-[18px]">person</span><span class="text-sm">${formatTeacherName(teacherText, lecturerDb)}</span></div>` : '';
+      const isWegzeit = teacherText && teacherText.toLowerCase() === 'wegzeit';
+      const location = ev.location && !isWegzeit ? `<div class="flex items-center gap-2 text-gray-500"><span class="material-symbols-outlined text-[18px]">meeting_room</span><span class="text-sm">${ev.location}${isAsync ? ' <span style="color: #7c3aed;">(asynchron)</span>' : ''}</span></div>` : '';
+      const teacher = teacherText && !isWegzeit ? `<div class="flex items-center gap-2 text-gray-500 col-span-2"><span class="material-symbols-outlined text-[18px]">person</span><span class="text-sm">${formatTeacherName(teacherText, lecturerDb)}</span></div>` : '';
       let typeLabel = 'V';
       let typeColorClass = 'bg-blue-50 text-[#002551]';
-      if (isExam) {
+      if (isWegzeit) {
+        typeLabel = 'W';
+        typeColorClass = 'bg-green-50 text-green-700';
+      } else if (isExam) {
         typeLabel = 'K';
         typeColorClass = 'bg-red-50 text-red-700';
       } else if (isOnline) {
@@ -1108,8 +1160,8 @@ function renderMobileSchedule(grouped, weekDays, isInitialLoad, lecturerDb) {
         typeColorClass = 'bg-purple-50 text-purple-700';
       }
 
-      const borderColor = isExam ? 'border-red-600' : isOnline ? 'border-green-600' : isAsync ? 'border-purple-600' : 'border-[#003a79]';
-      const typeClass = isExam ? ' exam' : isOnline ? ' online' : isAsync ? ' async' : '';
+      const borderColor = isWegzeit ? 'border-green-400' : isExam ? 'border-red-600' : isOnline ? 'border-green-600' : isAsync ? 'border-purple-600' : 'border-[#003a79]';
+      const typeClass = isWegzeit ? ' wegzeit' : isExam ? ' exam' : isOnline ? ' online' : isAsync ? ' async' : '';
 
       // Check if lecturer is not in reference list and add warning icon
       // let warningIcon = '';
@@ -1644,6 +1696,105 @@ function deleteFavorite(favoriteId, data) {
   renderFavoritesList(data);
 }
 
+function logUpcomingEvents(semester, faculty, data) {
+  if (!data || !data.events || !semester || !faculty) {
+    console.log('[Upcoming Events] Missing required data');
+    return;
+  }
+
+  const now = new Date();
+  const sixMonthsAgo = new Date(now.getTime() - (6 * 30 * 24 * 60 * 60 * 1000));
+  const twoYearsLater = new Date(now.getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
+
+  // Filter events for selected semester and faculty
+  const upcomingEvents = data.events
+    .filter(event => {
+      if (!event.start || !event.sourceSemester || !event.sourceFaculty) return false;
+      const eventDate = new Date(event.start);
+      const matchesSemester = event.sourceSemester === semester;
+      const matchesFaculty = event.sourceFaculty === faculty;
+      const isInRange = eventDate >= sixMonthsAgo && eventDate <= twoYearsLater;
+      return matchesSemester && matchesFaculty && isInRange;
+    })
+    .sort((a, b) => new Date(a.start) - new Date(b.start))
+    .slice(0, 10); // Show max 10 upcoming events
+
+  console.log(`\n=== Nächste anstehende Events für ${semester} - ${faculty} ===`);
+  if (upcomingEvents.length === 0) {
+    console.log('Keine anstehenden Events gefunden.');
+  } else {
+    upcomingEvents.forEach((event, index) => {
+      const eventDate = new Date(event.start);
+      const formattedDate = eventDate.toLocaleDateString('de-DE', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      const formattedTime = eventDate.toLocaleTimeString('de-DE', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+      console.log(`${index + 1}. ${formattedDate} um ${formattedTime}: ${event.title}`);
+      console.log(`   Ort: ${event.location || 'N/A'}`);
+      console.log(`   Typ: ${event.type || 'N/A'}`);
+      console.log('');
+    });
+  }
+  console.log('================================================\n');
+}
+
+function hasFacultyEventsInTimeRange(faculty, semester, data) {
+  if (!data || !data.events || !data.schedules) {
+    console.log('[Filter] Missing data:', { hasData: !!data, hasEvents: !!data?.events, hasSchedules: !!data?.schedules });
+    return false;
+  }
+  
+  // Calculate time range: 6 months before today to 2 years in the future (for dual study programs)
+  const now = new Date();
+  const sixMonthsAgo = new Date(now.getTime() - (6 * 30 * 24 * 60 * 60 * 1000));
+  const twoYearsLater = new Date(now.getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
+  
+  // Only consider events from 2020 onwards (ignore old data from 2013)
+  const year2020 = new Date('2020-01-01T00:00:00.000Z');
+  
+  console.log(`[Filter] Checking faculty ${faculty}, semester ${semester}, time range: ${sixMonthsAgo.toISOString()} to ${twoYearsLater.toISOString()} (only events from 2020+)`);
+  
+  // Find all schedules for this faculty and semester
+  const relevantSchedules = data.schedules.filter(
+    schedule => schedule.semester === semester && schedule.faculty === faculty
+  );
+  
+  console.log(`[Filter] Found ${relevantSchedules.length} schedules for ${faculty} semester ${semester}`);
+  
+  if (relevantSchedules.length === 0) return false;
+  
+  // Get all schedule IDs for this faculty
+  const scheduleIds = new Set(relevantSchedules.map(s => s.id));
+  console.log(`[Filter] Schedule IDs:`, Array.from(scheduleIds));
+  
+  // Check if any event for these schedules is in the time range and from 2020 onwards
+  let matchingEvents = 0;
+  const hasEventInRange = data.events.some(event => {
+    if (!event.start) return false;
+    if (!scheduleIds.has(event.sourceId)) return false;
+    
+    const eventDate = new Date(event.start);
+    const isFrom2020 = eventDate >= year2020;
+    const isInRange = isFrom2020 && eventDate >= sixMonthsAgo && eventDate <= twoYearsLater;
+    
+    if (isInRange) {
+      matchingEvents++;
+      console.log(`[Filter] Matching event: ${event.title} at ${eventDate.toISOString()}`);
+    }
+    
+    return isInRange;
+  });
+  
+  console.log(`[Filter] Found ${matchingEvents} matching events for ${faculty} semester ${semester}`);
+  return hasEventInRange;
+}
+
 function populateFaculties(semesterSelect, facultySelect, data) {
   if (!semesterSelect || !facultySelect || !data) return;
   const sem = semesterSelect.value;
@@ -1651,8 +1802,15 @@ function populateFaculties(semesterSelect, facultySelect, data) {
   const schedules = data.schedules || [];
   const faculties = Array.from(new Set(schedules.filter((schedule) => schedule.semester === sem).map((schedule) => schedule.faculty).filter(Boolean)));
   
+  // Filter faculties based on events in time range
+  const filteredFaculties = faculties.filter(faculty => {
+    const hasEvents = hasFacultyEventsInTimeRange(faculty, sem, data);
+    console.log(`[Filter] Faculty ${faculty} has events in time range:`, hasEvents);
+    return hasEvents;
+  });
+  
   // Map faculties to study programs and sort alphabetically by full name
-  const sortedFaculties = faculties.map(faculty => {
+  const sortedFaculties = filteredFaculties.map(faculty => {
     const lowerFaculty = faculty.toLowerCase();
     // Find matching study program by abbreviation
     const matchedKey = Object.keys(STUDY_PROGRAMS).find(key => key.toLowerCase() === lowerFaculty);
@@ -2195,6 +2353,52 @@ async function init() {
       return null;
     }
 
+    function updateConfigFromActiveSource(activeSource, data) {
+      if (!activeSource || !data || !data.schedules) return;
+
+      const schedule = data.schedules.find(s => s.id === activeSource);
+      if (!schedule) return;
+
+      const { semester, faculty, course } = schedule;
+
+      // Update desktop selects without triggering change events
+      if (semesterSelect && semesterSelect.value !== semester) {
+        semesterSelect.value = semester;
+        populateFaculties(semesterSelect, facultySelect, data);
+      }
+      if (facultySelect && facultySelect.value !== faculty) {
+        facultySelect.value = faculty;
+        populateCourses(courseSelect, semesterSelect, facultySelect, data);
+      }
+      if (courseSelect && courseSelect.value !== activeSource) {
+        courseSelect.value = activeSource;
+      }
+
+      // Update mobile selects without triggering change events
+      if (semesterSelectMobile && semesterSelectMobile.value !== semester) {
+        semesterSelectMobile.value = semester;
+        populateFaculties(semesterSelectMobile, facultySelectMobile, data);
+      }
+      if (facultySelectMobile && facultySelectMobile.value !== faculty) {
+        facultySelectMobile.value = faculty;
+        populateCourses(courseSelectMobile, semesterSelectMobile, facultySelectMobile, data);
+      }
+      if (courseSelectMobile && courseSelectMobile.value !== activeSource) {
+        courseSelectMobile.value = activeSource;
+      }
+
+      // Update dropdowns
+      setTimeout(() => {
+        if (updateFacultyDropdown) updateFacultyDropdown();
+        if (updateFacultyDropdownMobile) updateFacultyDropdownMobile();
+        if (updateCourseDropdown) updateCourseDropdown();
+        if (updateCourseDropdownMobile) updateCourseDropdownMobile();
+      }, 100);
+
+      // Save the selection to cookies/localStorage
+      saveSelection();
+    }
+
     // Desktop event listeners
     if (semesterSelect) {
       semesterSelect.addEventListener('change', () => {
@@ -2206,6 +2410,11 @@ async function init() {
         saveSelection();
         updateCurrentFavoriteLabel(data, semesterSelect, facultySelect, courseSelect, currentFavoriteLabelDesktop, addToFavoritesDesktopPanel);
         renderSchedule(data, activeSource, currentWeekStart, searchQuery, false);
+        
+        // Log upcoming events when semester changes
+        if (facultySelect.value) {
+          logUpcomingEvents(semesterSelect.value, facultySelect.value, data);
+        }
       });
     }
 
@@ -2347,6 +2556,21 @@ async function init() {
         window.location.href = 'dozentenplan.html';
       });
     }
+
+    // Dark mode toggle - desktop
+    const darkModeToggleDesktop = document.getElementById('darkModeToggleDesktop');
+    if (darkModeToggleDesktop) {
+      darkModeToggleDesktop.addEventListener('click', toggleDarkMode);
+    }
+
+    // Dark mode toggle - mobile
+    const darkModeToggleMobile = document.getElementById('darkModeToggleMobile');
+    if (darkModeToggleMobile) {
+      darkModeToggleMobile.addEventListener('click', toggleDarkMode);
+    }
+
+    // Initialize dark mode
+    initializeDarkMode();
 
     if (currentWeekButton) {
       currentWeekButton.addEventListener('click', () => {
@@ -2758,22 +2982,34 @@ async function init() {
 
     const cached = loadCachedSelection();
     if (cached && semesterOptions.includes(cached.semester)) {
-      if (semesterSelect) semesterSelect.value = cached.semester;
-      if (semesterSelectMobile) semesterSelectMobile.value = cached.semester;
-      
+      if (semesterSelect) {
+        semesterSelect.value = cached.semester;
+        semesterSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      if (semesterSelectMobile) {
+        semesterSelectMobile.value = cached.semester;
+        semesterSelectMobile.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
       // Repopulate faculties after setting cached semester
       if (semesterSelect) populateFaculties(semesterSelect, facultySelect, data);
       if (semesterSelectMobile) populateFaculties(semesterSelectMobile, facultySelectMobile, data);
     }
-    
+
     // Update Schanzen dropdowns after populating faculties
     if (updateFacultyDropdown) updateFacultyDropdown();
     if (updateFacultyDropdownMobile) updateFacultyDropdownMobile();
-    
+
     if (cached && cached.faculty) {
-      if (facultySelect) facultySelect.value = cached.faculty;
-      if (facultySelectMobile) facultySelectMobile.value = cached.faculty;
-      
+      if (facultySelect) {
+        facultySelect.value = cached.faculty;
+        facultySelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      if (facultySelectMobile) {
+        facultySelectMobile.value = cached.faculty;
+        facultySelectMobile.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
       // Repopulate courses after setting cached faculty
       if (courseSelect) populateCourses(courseSelect, semesterSelect, facultySelect, data);
       if (courseSelectMobile) populateCourses(courseSelectMobile, semesterSelectMobile, facultySelectMobile, data);
@@ -2784,11 +3020,22 @@ async function init() {
     if (updateCourseDropdownMobile) updateCourseDropdownMobile();
     
     if (cached && cached.courseId) {
-      if (courseSelect) courseSelect.value = cached.courseId;
-      if (courseSelectMobile) courseSelectMobile.value = cached.courseId;
+      if (courseSelect) {
+        courseSelect.value = cached.courseId;
+        courseSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      if (courseSelectMobile) {
+        courseSelectMobile.value = cached.courseId;
+        courseSelectMobile.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     }
     
     activeSource = (courseSelect && courseSelect.value) || (courseSelectMobile && courseSelectMobile.value) || activeSource;
+
+    // Update config to match the active source (displayed schedule)
+    if (activeSource) {
+      updateConfigFromActiveSource(activeSource, data);
+    }
 
     // Check if user visited today and set animation flag
     shouldAnimateProgress = !hasVisitedToday();
