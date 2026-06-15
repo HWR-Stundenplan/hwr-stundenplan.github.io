@@ -2100,7 +2100,7 @@ async function init() {
             // Add line break for "Dienstleistungsmanagement" in tooltip
             const tooltipName = opt.fullName === 'Dienstleistungsmanagement' ? 'Dienstleistungs-<br>management' : opt.fullName;
             return `
-              <button class="schanzen-dropdown-option ${opt.selected ? 'selected' : ''}" data-value="${opt.value}">
+              <button type="button" class="schanzen-dropdown-option ${opt.selected ? 'selected' : ''}" data-value="${opt.value}">
                 <span class="study-program-full">${opt.fullName}</span>
                 <span class="study-program-abbreviated">${opt.abbreviation}</span>
                 <span class="study-program-info-icon">
@@ -2112,7 +2112,7 @@ async function init() {
           } else {
             // Regular option (no abbreviation)
             return `
-              <button class="schanzen-dropdown-option ${opt.selected ? 'selected' : ''}" data-value="${opt.value}">
+              <button type="button" class="schanzen-dropdown-option ${opt.selected ? 'selected' : ''}" data-value="${opt.value}">
                 ${opt.text}
               </button>
             `;
@@ -2261,9 +2261,28 @@ async function init() {
       // Set up event listeners (only once)
       if (!container.hasAttribute('data-dropdown-initialized')) {
         container.setAttribute('data-dropdown-initialized', 'true');
+        
+        // Fix #2: Handle both click and touchstart for iOS compatibility
         dropdown.addEventListener('click', toggleDropdown);
+        dropdown.addEventListener('touchstart', (e) => {
+          // iOS needs touchstart to properly register the element as clickable
+          // Don't prevent default to allow click to fire
+        }, { passive: true });
+        
+        // Fix #2: Use touchstart for option selection on iOS
         optionsContainer.addEventListener('click', handleOptionClick);
+        optionsContainer.addEventListener('touchstart', (e) => {
+          const optionBtn = e.target.closest('.schanzen-dropdown-option');
+          if (optionBtn) {
+            // For iOS, handle the selection immediately on touchstart
+            // This prevents the menu from closing before the click registers
+            e.preventDefault();
+            handleOptionClick(e);
+          }
+        }, { passive: false });
+        
         document.addEventListener('click', handleOutsideClick);
+        // Don't add touchstart to document to avoid closing menu on scroll
       }
 
       // Initial population
