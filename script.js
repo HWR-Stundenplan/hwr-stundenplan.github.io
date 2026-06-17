@@ -8,6 +8,7 @@ const PENDING_DELETE_KEY = 'st-plan-pending-delete';
 const DAILY_VISIT_KEY = 'st-plan-daily-visit';
 const SHOW_ALL_EVENTS_KEY = 'st-plan-show-all-events';
 const DARK_MODE_KEY = 'st-plan-dark-mode';
+const STARTER_VIEW_COMPLETED_KEY = 'st-plan-starter-completed';
 const CACHE_EXPIRY_HOURS = 24;
 
 // Study program abbreviation mapping
@@ -35,6 +36,384 @@ function hasVisitedToday() {
 function markDailyVisit() {
   const todayKey = getLocalDateKey(new Date());
   localStorage.setItem(DAILY_VISIT_KEY, todayKey);
+}
+
+function isStarterViewNeeded() {
+  const starterCompleted = localStorage.getItem(STARTER_VIEW_COMPLETED_KEY);
+  const cacheKey = 'st-plan-selection-v1';
+
+  console.log('[Starter View Debug] Checking if starter view is needed...');
+  console.log('[Starter View Debug] STARTER_VIEW_COMPLETED_KEY:', starterCompleted);
+  console.log('[Starter View Debug] cacheKey:', cacheKey);
+
+  // Check if starter view was already completed
+  if (starterCompleted === 'true') {
+    console.log('[Starter View Debug] Starter view already completed, returning false');
+    return false;
+  }
+
+  // Check if there's a cached selection in localStorage
+  const cachedSelection = localStorage.getItem(cacheKey);
+  console.log('[Starter View Debug] cachedSelection from localStorage:', cachedSelection);
+  if (cachedSelection) {
+    try {
+      const parsed = JSON.parse(cachedSelection);
+      console.log('[Starter View Debug] Parsed cached selection:', parsed);
+      if (parsed && parsed.semester && parsed.faculty && parsed.courseId) {
+        console.log('[Starter View Debug] Valid cached selection found, returning false');
+        return false;
+      }
+    } catch (e) {
+      console.log('[Starter View Debug] Error parsing cached selection:', e);
+      // Invalid data, continue to check cookies
+    }
+  }
+
+  // Check if there's a cached selection in cookies
+  const cookieSelection = getCookie(cacheKey);
+  console.log('[Starter View Debug] cookieSelection:', cookieSelection);
+  if (cookieSelection) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(cookieSelection));
+      console.log('[Starter View Debug] Parsed cookie selection:', parsed);
+      if (parsed && parsed.semester && parsed.faculty && parsed.courseId) {
+        console.log('[Starter View Debug] Valid cookie selection found, returning false');
+        return false;
+      }
+    } catch (e) {
+      console.log('[Starter View Debug] Error parsing cookie selection:', e);
+      // Invalid data, show starter view
+    }
+  }
+
+  // Check if there are any favorites
+  const favorites = getFavorites();
+  console.log('[Starter View Debug] favorites:', favorites);
+  console.log('[Starter View Debug] favorites.length:', favorites ? favorites.length : 0);
+  if (favorites && favorites.length > 0) {
+    console.log('[Starter View Debug] Favorites found, returning false');
+    return false;
+  }
+
+  console.log('[Starter View Debug] No cached data found, starter view needed, returning true');
+  return true;
+}
+
+function markStarterViewCompleted() {
+  localStorage.setItem(STARTER_VIEW_COMPLETED_KEY, 'true');
+}
+
+// Global function to initialize Schanzen dropdowns
+function initializeSchanzenDropdown(dropdownId, selectId, optionsId) {
+  const dropdown = document.querySelector(`[data-dropdown="${dropdownId}"]`);
+  const select = document.getElementById(selectId);
+  const optionsContainer = document.getElementById(optionsId);
+  const container = dropdown?.querySelector('.schanzen-dropdown-container');
+  const valueDisplay = dropdown?.querySelector('.schanzen-dropdown-value');
+  const dropdownMenu = dropdown?.querySelector('.schanzen-dropdown-menu');
+
+  if (!dropdown || !select || !optionsContainer || !container || !valueDisplay || !dropdownMenu) {
+    console.warn('[Dropdown] Missing elements for:', dropdownId);
+    return;
+  }
+
+  // Check if this is a faculty dropdown (study programs)
+  const isFacultyDropdown = dropdownId.includes('faculty');
+
+  // Update options when select changes
+  function updateOptions() {
+    const options = Array.from(select.options).map(opt => ({
+      value: opt.value,
+      text: opt.textContent,
+      abbreviation: opt.dataset.abbreviation || '',
+      fullName: opt.dataset.fullname || opt.textContent,
+      selected: opt.selected
+    }));
+
+    optionsContainer.innerHTML = options.map(opt => {
+      if (isFacultyDropdown && opt.abbreviation && opt.fullName && opt.abbreviation !== opt.fullName) {
+        // Study program option with full name by default, abbreviation + info icon on small screens
+        // Add line break for "Dienstleistungsmanagement" in tooltip
+        const tooltipName = opt.fullName === 'Dienstleistungsmanagement' ? 'Dienstleistungs-<br>management' : opt.fullName;
+        return `
+          <button type="button" class="schanzen-dropdown-option ${opt.selected ? 'selected' : ''}" data-value="${opt.value}">
+            <span class="study-program-full">${opt.fullName}</span>
+            <span class="study-program-abbreviated">${opt.abbreviation}</span>
+            <span class="study-program-info-icon">
+              <span class="material-symbols-outlined">info</span>
+              <span class="study-program-tooltip">${tooltipName}</span>
+            </span>
+          </button>
+        `;
+      } else {
+        // Regular option (no abbreviation)
+        return `
+          <button type="button" class="schanzen-dropdown-option ${opt.selected ? 'selected' : ''}" data-value="${opt.value}">
+            ${opt.text}
+          </button>
+        `;
+      }
+    }).join('');
+
+    // Update display value
+    const selectedOption = select.options[select.selectedIndex];
+    valueDisplay.textContent = selectedOption ? selectedOption.textContent : 'Bitte wählen...';
+  }
+
+  // Toggle dropdown
+  function toggleDropdown(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const isOpen = dropdown.classList.contains('open');
+
+    // On mobile, close all other dropdowns before opening this one
+    const isMobile = window.innerWidth <= 768 || dropdownId.includes('-mobile');
+    if (isMobile) {
+      document.querySelectorAll('.schanzen-dropdown.open').forEach(d => {
+        if (d !== dropdown) {
+          d.classList.remove('open');
+          const otherMenu = d.querySelector('.schanzen-dropdown-menu');
+          if (otherMenu) {
+            otherMenu.style.display = 'none';
+            otherMenu.style.opacity = '0';
+            otherMenu.style.pointerEvents = 'none';
+          }
+        }
+      });
+    }
+
+    if (isOpen) {
+      dropdown.classList.remove('open');
+      if (dropdownMenu) {
+        dropdownMenu.style.display = 'none';
+        dropdownMenu.style.opacity = '0';
+        dropdownMenu.style.pointerEvents = 'none';
+      }
+    } else {
+      dropdown.classList.add('open');
+      if (dropdownMenu) {
+        dropdownMenu.style.display = 'block';
+        dropdownMenu.style.opacity = '1';
+        dropdownMenu.style.pointerEvents = 'auto';
+        dropdownMenu.style.overflow = 'visible';
+        dropdownMenu.style.maxHeight = 'none';
+      }
+      if (optionsContainer) {
+        optionsContainer.style.overflow = 'visible';
+        optionsContainer.style.maxHeight = 'none';
+      }
+
+      // Check for overflow after dropdown is opened (elements are now visible)
+      if (isFacultyDropdown) {
+        setTimeout(() => {
+          const studyProgramOptions = optionsContainer.querySelectorAll('.schanzen-dropdown-option');
+          studyProgramOptions.forEach(option => {
+            const fullNameSpan = option.querySelector('.study-program-full');
+            if (fullNameSpan) {
+              const scrollWidth = fullNameSpan.scrollWidth;
+              const clientWidth = fullNameSpan.clientWidth;
+              if (scrollWidth > clientWidth) {
+                option.classList.add('too-narrow');
+              } else {
+                option.classList.remove('too-narrow');
+              }
+            }
+          });
+
+          // Setup tooltip positioning for info icons
+          const infoIcons = optionsContainer.querySelectorAll('.study-program-info-icon');
+          infoIcons.forEach(icon => {
+            icon.addEventListener('mouseenter', () => {
+              const tooltip = icon.querySelector('.study-program-tooltip');
+              if (!tooltip) return;
+
+              const iconRect = icon.getBoundingClientRect();
+              const tooltipRect = tooltip.getBoundingClientRect();
+              const spaceAbove = iconRect.top;
+              const spaceBelow = window.innerHeight - iconRect.bottom;
+
+              // If not enough space above, position below
+              if (spaceAbove < tooltipRect.height + 20) {
+                tooltip.classList.add('tooltip-below');
+              } else {
+                tooltip.classList.remove('tooltip-below');
+              }
+            });
+          });
+        }, 50);
+      }
+    }
+  }
+
+  // Handle option selection
+  function handleOptionClick(e) {
+    const optionBtn = e.target.closest('.schanzen-dropdown-option');
+    if (!optionBtn) return;
+
+    e.stopPropagation();
+    const value = optionBtn.dataset.value;
+    select.value = value;
+
+    // Update selected state
+    optionsContainer.querySelectorAll('.schanzen-dropdown-option').forEach(btn => {
+      btn.classList.remove('selected');
+    });
+    optionBtn.classList.add('selected');
+
+    // Update display
+    valueDisplay.textContent = optionBtn.textContent;
+
+    // Close dropdown
+    dropdown.classList.remove('open');
+    if (dropdownMenu) {
+      dropdownMenu.style.display = 'none';
+      dropdownMenu.style.opacity = '0';
+      dropdownMenu.style.pointerEvents = 'none';
+    }
+
+    // Trigger change event on select
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  // Close dropdown when clicking outside
+  function handleOutsideClick(e) {
+    if (!dropdown.contains(e.target)) {
+      dropdown.classList.remove('open');
+      if (dropdownMenu) {
+        dropdownMenu.style.display = 'none';
+        dropdownMenu.style.opacity = '0';
+        dropdownMenu.style.pointerEvents = 'none';
+      }
+    }
+  }
+
+  // Set up event listeners (only once)
+  if (!container.hasAttribute('data-dropdown-initialized')) {
+    container.setAttribute('data-dropdown-initialized', 'true');
+    
+    dropdown.addEventListener('click', toggleDropdown);
+    dropdown.addEventListener('touchstart', (e) => {
+      // iOS needs touchstart to properly register the element as clickable
+    }, { passive: true });
+    
+    optionsContainer.addEventListener('click', handleOptionClick);
+    optionsContainer.addEventListener('touchstart', (e) => {
+      const optionBtn = e.target.closest('.schanzen-dropdown-option');
+      if (optionBtn) {
+        e.preventDefault();
+        handleOptionClick(e);
+      }
+    }, { passive: false });
+    
+    document.addEventListener('click', handleOutsideClick);
+  }
+
+  // Initial population
+  updateOptions();
+
+  // Listen for select changes to update options
+  select.addEventListener('change', updateOptions);
+
+  // Return update function for external use
+  return updateOptions;
+}
+
+function initializeStarterView(data, maxSemester, cacheKey) {
+  const modal = document.getElementById('starterViewModal');
+  if (!modal) return;
+
+  // Show the modal
+  modal.classList.remove('hidden');
+
+  // Get starter view controls
+  const semesterSelect = document.getElementById('starterSemesterSelect');
+  const facultySelect = document.getElementById('starterFacultySelect');
+  const courseSelect = document.getElementById('starterCourseSelect');
+  const submitButton = document.getElementById('starterViewSubmit');
+
+  if (!semesterSelect || !facultySelect || !courseSelect || !submitButton) return;
+
+  // Populate semester options
+  const semesterOptions = Array.from({ length: maxSemester }, (_, index) => `semester${index + 1}`);
+  semesterSelect.innerHTML = semesterOptions.map((semester, index) => `<option value="${semester}">Semester ${index + 1}</option>`).join('');
+
+  // Initialize Schanzen dropdowns for starter view
+  const updateSemesterDropdown = initializeSchanzenDropdown('starter-semester', 'starterSemesterSelect', 'starterSemesterOptions');
+  const updateFacultyDropdown = initializeSchanzenDropdown('starter-faculty', 'starterFacultySelect', 'starterFacultyOptions');
+  const updateCourseDropdown = initializeSchanzenDropdown('starter-course', 'starterCourseSelect', 'starterCourseOptions');
+
+  // Handle semester change
+  semesterSelect.addEventListener('change', () => {
+    populateFaculties(semesterSelect, facultySelect, data);
+    updateFacultyDropdown();
+    courseSelect.innerHTML = '';
+    updateCourseDropdown();
+    updateSubmitButton();
+  });
+
+  // Handle faculty change
+  facultySelect.addEventListener('change', () => {
+    populateCourses(courseSelect, semesterSelect, facultySelect, data);
+    updateCourseDropdown();
+    updateSubmitButton();
+  });
+
+  // Handle course change
+  courseSelect.addEventListener('change', () => {
+    updateSubmitButton();
+  });
+
+  // Update submit button state
+  function updateSubmitButton() {
+    const isValid = semesterSelect.value && facultySelect.value && courseSelect.value;
+    submitButton.disabled = !isValid;
+  }
+
+  // Handle submit button click
+  submitButton.addEventListener('click', () => {
+    const semester = semesterSelect.value;
+    const faculty = facultySelect.value;
+    const courseId = courseSelect.value;
+
+    if (!semester || !faculty || !courseId) return;
+
+    // Save the selection
+    const selection = {
+      semester: semester,
+      faculty: faculty,
+      courseId: courseId,
+    };
+    const payload = JSON.stringify(selection);
+    try {
+      localStorage.setItem(cacheKey, payload);
+    } catch (error) {
+      setCookie(cacheKey, encodeURIComponent(payload), 365);
+    }
+
+    // Add to favorites
+    const course = data.schedules.find(s => s.id === courseId);
+    if (course) {
+      const favorites = getFavorites();
+      const abbreviation = generateFavoriteAbbreviation(semester, faculty, course.title);
+      const newFavorite = {
+        id: Date.now().toString(),
+        semester: semester,
+        faculty: faculty,
+        courseId: courseId,
+        abbreviation: abbreviation,
+        createdAt: new Date().toISOString()
+      };
+      favorites.push(newFavorite);
+      saveFavorites(favorites);
+    }
+
+    // Mark starter view as completed
+    markStarterViewCompleted();
+
+    // Hide the modal and reload the page
+    modal.classList.add('hidden');
+    location.reload();
+  });
 }
 
 function animateProgress(element, targetPercent, duration = 1500) {
@@ -902,6 +1281,32 @@ function renderSkeletonLoader() {
       `;
     }).join('');
   }
+}
+
+function hideSkeletonLoader() {
+  // Remove skeleton loader classes after the page is fully rendered
+  const skeletonElements = document.querySelectorAll('.skeleton-loader');
+  skeletonElements.forEach(el => {
+    el.classList.remove('skeleton-loader');
+  });
+}
+
+function waitForPageStable(callback) {
+  // Wait for the page to be stable before removing the skeleton loader
+  let frames = 0;
+  const maxFrames = 3; // Wait for 3 animation frames to ensure stability
+  
+  function checkStability() {
+    frames++;
+    if (frames >= maxFrames) {
+      // Additional small delay to ensure CSS transitions are complete
+      setTimeout(callback, 50);
+    } else {
+      requestAnimationFrame(checkStability);
+    }
+  }
+  
+  requestAnimationFrame(checkStability);
 }
 
 function renderSchedule(data, selectedSource, referenceDate, searchQuery = '', isInitialLoad = false) {
@@ -2046,6 +2451,12 @@ async function init() {
       if (showAllEventsButtonMobile) showAllEventsButtonMobile.classList.add('progress-active');
     }
 
+    // Check if starter view is needed (cookies/localStorage empty)
+    if (isStarterViewNeeded()) {
+      initializeStarterView(data, maxSemester, cacheKey);
+      return; // Exit early, starter view will handle the rest
+    }
+
     const semesterOptions = Array.from({ length: maxSemester }, (_, index) => `semester${index + 1}`);
     
     // Populate desktop selects
@@ -2066,234 +2477,6 @@ async function init() {
     if (courseSelectMobile) populateCourses(courseSelectMobile, semesterSelectMobile, facultySelectMobile, data);
     
     // Initialize Schanzen dropdowns AFTER populating selects
-
-    // Initialize Schanzen dropdowns - simplified version
-    function initializeSchanzenDropdown(dropdownId, selectId, optionsId) {
-      const dropdown = document.querySelector(`[data-dropdown="${dropdownId}"]`);
-      const select = document.getElementById(selectId);
-      const optionsContainer = document.getElementById(optionsId);
-      const container = dropdown?.querySelector('.schanzen-dropdown-container');
-      const valueDisplay = dropdown?.querySelector('.schanzen-dropdown-value');
-      const dropdownMenu = dropdown?.querySelector('.schanzen-dropdown-menu');
-
-      if (!dropdown || !select || !optionsContainer || !container || !valueDisplay || !dropdownMenu) {
-        console.warn('[Dropdown] Missing elements for:', dropdownId);
-        return;
-      }
-
-      // Check if this is a faculty dropdown (study programs)
-      const isFacultyDropdown = dropdownId.includes('faculty');
-
-      // Update options when select changes
-      function updateOptions() {
-        const options = Array.from(select.options).map(opt => ({
-          value: opt.value,
-          text: opt.textContent,
-          abbreviation: opt.dataset.abbreviation || '',
-          fullName: opt.dataset.fullname || opt.textContent,
-          selected: opt.selected
-        }));
-
-        optionsContainer.innerHTML = options.map(opt => {
-          if (isFacultyDropdown && opt.abbreviation && opt.fullName && opt.abbreviation !== opt.fullName) {
-            // Study program option with full name by default, abbreviation + info icon on small screens
-            // Add line break for "Dienstleistungsmanagement" in tooltip
-            const tooltipName = opt.fullName === 'Dienstleistungsmanagement' ? 'Dienstleistungs-<br>management' : opt.fullName;
-            return `
-              <button type="button" class="schanzen-dropdown-option ${opt.selected ? 'selected' : ''}" data-value="${opt.value}">
-                <span class="study-program-full">${opt.fullName}</span>
-                <span class="study-program-abbreviated">${opt.abbreviation}</span>
-                <span class="study-program-info-icon">
-                  <span class="material-symbols-outlined">info</span>
-                  <span class="study-program-tooltip">${tooltipName}</span>
-                </span>
-              </button>
-            `;
-          } else {
-            // Regular option (no abbreviation)
-            return `
-              <button type="button" class="schanzen-dropdown-option ${opt.selected ? 'selected' : ''}" data-value="${opt.value}">
-                ${opt.text}
-              </button>
-            `;
-          }
-        }).join('');
-
-        // Update display value
-        const selectedOption = select.options[select.selectedIndex];
-        valueDisplay.textContent = selectedOption ? selectedOption.textContent : 'Bitte wählen...';
-      }
-
-      // Toggle dropdown
-      function toggleDropdown(e) {
-        e.preventDefault();
-        console.log('[Dropdown] Toggle clicked, dropdownId:', dropdownId);
-        e.stopPropagation();
-        const isOpen = dropdown.classList.contains('open');
-        console.log('[Dropdown] Current isOpen state:', isOpen);
-
-        // On mobile, close all other dropdowns before opening this one
-        const isMobile = window.innerWidth <= 768 || dropdownId.includes('-mobile');
-        if (isMobile) {
-          document.querySelectorAll('.schanzen-dropdown.open').forEach(d => {
-            if (d !== dropdown) {
-              d.classList.remove('open');
-              const otherMenu = d.querySelector('.schanzen-dropdown-menu');
-              if (otherMenu) {
-                otherMenu.style.display = 'none';
-                otherMenu.style.opacity = '0';
-                otherMenu.style.pointerEvents = 'none';
-              }
-            }
-          });
-        }
-
-        if (isOpen) {
-          dropdown.classList.remove('open');
-          if (dropdownMenu) {
-            dropdownMenu.style.display = 'none';
-            dropdownMenu.style.opacity = '0';
-            dropdownMenu.style.pointerEvents = 'none';
-          }
-          console.log('[Dropdown] Closed dropdown');
-        } else {
-          dropdown.classList.add('open');
-          if (dropdownMenu) {
-            dropdownMenu.style.display = 'block';
-            dropdownMenu.style.opacity = '1';
-            dropdownMenu.style.pointerEvents = 'auto';
-            dropdownMenu.style.overflow = 'visible';
-            dropdownMenu.style.maxHeight = 'none';
-          }
-          if (optionsContainer) {
-            optionsContainer.style.overflow = 'visible';
-            optionsContainer.style.maxHeight = 'none';
-          }
-          console.log('[Dropdown] Opened dropdown, classes:', dropdown.className);
-
-          // Check for overflow after dropdown is opened (elements are now visible)
-          if (isFacultyDropdown) {
-            setTimeout(() => {
-              console.log('[Study Program] Checking overflow after dropdown opened');
-              const studyProgramOptions = optionsContainer.querySelectorAll('.schanzen-dropdown-option');
-              studyProgramOptions.forEach(option => {
-                const fullNameSpan = option.querySelector('.study-program-full');
-                if (fullNameSpan) {
-                  const scrollWidth = fullNameSpan.scrollWidth;
-                  const clientWidth = fullNameSpan.clientWidth;
-                  console.log('[Study Program] Option:', fullNameSpan.textContent, 'scrollWidth:', scrollWidth, 'clientWidth:', clientWidth);
-                  if (scrollWidth > clientWidth) {
-                    option.classList.add('too-narrow');
-                    console.log('[Study Program] Added too-narrow class to:', fullNameSpan.textContent);
-                  } else {
-                    option.classList.remove('too-narrow');
-                  }
-                }
-              });
-
-              // Setup tooltip positioning for info icons
-              const infoIcons = optionsContainer.querySelectorAll('.study-program-info-icon');
-              infoIcons.forEach(icon => {
-                icon.addEventListener('mouseenter', () => {
-                  const tooltip = icon.querySelector('.study-program-tooltip');
-                  if (!tooltip) return;
-
-                  const iconRect = icon.getBoundingClientRect();
-                  const tooltipRect = tooltip.getBoundingClientRect();
-                  const spaceAbove = iconRect.top;
-                  const spaceBelow = window.innerHeight - iconRect.bottom;
-
-                  // If not enough space above, position below
-                  if (spaceAbove < tooltipRect.height + 20) {
-                    tooltip.classList.add('tooltip-below');
-                  } else {
-                    tooltip.classList.remove('tooltip-below');
-                  }
-                });
-              });
-            }, 50);
-          }
-        }
-      }
-
-      // Handle option selection
-      function handleOptionClick(e) {
-        const optionBtn = e.target.closest('.schanzen-dropdown-option');
-        if (!optionBtn) return;
-
-        e.stopPropagation();
-        const value = optionBtn.dataset.value;
-        select.value = value;
-
-        // Update selected state
-        optionsContainer.querySelectorAll('.schanzen-dropdown-option').forEach(btn => {
-          btn.classList.remove('selected');
-        });
-        optionBtn.classList.add('selected');
-
-        // Update display
-        valueDisplay.textContent = optionBtn.textContent;
-
-        // Close dropdown
-        dropdown.classList.remove('open');
-        if (dropdownMenu) {
-          dropdownMenu.style.display = 'none';
-          dropdownMenu.style.opacity = '0';
-          dropdownMenu.style.pointerEvents = 'none';
-        }
-
-        // Trigger change event on select
-        select.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-
-      // Close dropdown when clicking outside
-      function handleOutsideClick(e) {
-        if (!dropdown.contains(e.target)) {
-          dropdown.classList.remove('open');
-          if (dropdownMenu) {
-            dropdownMenu.style.display = 'none';
-            dropdownMenu.style.opacity = '0';
-            dropdownMenu.style.pointerEvents = 'none';
-          }
-        }
-      }
-
-      // Set up event listeners (only once)
-      if (!container.hasAttribute('data-dropdown-initialized')) {
-        container.setAttribute('data-dropdown-initialized', 'true');
-        
-        // Fix #2: Handle both click and touchstart for iOS compatibility
-        dropdown.addEventListener('click', toggleDropdown);
-        dropdown.addEventListener('touchstart', (e) => {
-          // iOS needs touchstart to properly register the element as clickable
-          // Don't prevent default to allow click to fire
-        }, { passive: true });
-        
-        // Fix #2: Use touchstart for option selection on iOS
-        optionsContainer.addEventListener('click', handleOptionClick);
-        optionsContainer.addEventListener('touchstart', (e) => {
-          const optionBtn = e.target.closest('.schanzen-dropdown-option');
-          if (optionBtn) {
-            // For iOS, handle the selection immediately on touchstart
-            // This prevents the menu from closing before the click registers
-            e.preventDefault();
-            handleOptionClick(e);
-          }
-        }, { passive: false });
-        
-        document.addEventListener('click', handleOutsideClick);
-        // Don't add touchstart to document to avoid closing menu on scroll
-      }
-
-      // Initial population
-      updateOptions();
-
-      // Listen for select changes to update options
-      select.addEventListener('change', updateOptions);
-
-      // Return update function for external use
-      return updateOptions;
-    }
 
     // Initialize desktop Schanzen dropdowns
     const updateSemesterDropdown = initializeSchanzenDropdown('semester', 'semesterSelect', 'semesterOptions');
@@ -2507,6 +2690,8 @@ async function init() {
           localStorage.removeItem(cacheKey);
           localStorage.removeItem(SCHEDULE_CACHE_KEY);
           localStorage.removeItem(SCHEDULE_CACHE_TIMESTAMP_KEY);
+          localStorage.removeItem(STARTER_VIEW_COMPLETED_KEY);
+          localStorage.removeItem(FAVORITES_KEY);
           deleteCookie(cacheKey);
         } catch (error) {
           console.warn(error);
@@ -2937,6 +3122,8 @@ async function init() {
           localStorage.removeItem(cacheKey);
           localStorage.removeItem(SCHEDULE_CACHE_KEY);
           localStorage.removeItem(SCHEDULE_CACHE_TIMESTAMP_KEY);
+          localStorage.removeItem(STARTER_VIEW_COMPLETED_KEY);
+          localStorage.removeItem(FAVORITES_KEY);
           deleteCookie(cacheKey);
         } catch (error) {
           console.warn(error);

@@ -391,6 +391,104 @@
 
   </div>
 
+  <!-- Starter View Modal -->
+  <div id="starterViewModal" class="starter-view-modal hidden">
+    <div class="starter-view-overlay"></div>
+    <div class="starter-view-content">
+      <div class="starter-view-header">
+        <div class="starter-view-logo">
+          <img src="logo.png" alt="Logo" class="w-12 h-12 object-contain">
+        </div>
+        <h2 class="starter-view-title">Willkommen beim Stundenplan</h2>
+        <p class="starter-view-subtitle">Wähle deinen Stundenplan, um zu beginnen</p>
+      </div>
+      
+      <div class="starter-view-form">
+        <div class="starter-view-field">
+          <label class="starter-view-label">Semester</label>
+          <div class="schanzen-dropdown" data-dropdown="starter-semester">
+            <div class="schanzen-dropdown-container">
+              <span class="schanzen-dropdown-value">Bitte wählen...</span>
+              <div class="schanzen-overlay">
+                <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
+                  <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
+                  <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                </svg>
+                <div class="schanzen-icon-surface">
+                  <svg viewBox="0 0 327 64" preserveAspectRatio="none">
+                    <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
+                  </svg>
+                </div>
+                <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
+              </div>
+            </div>
+            <div class="schanzen-dropdown-menu">
+              <div class="schanzen-dropdown-options" id="starterSemesterOptions"></div>
+            </div>
+            <select id="starterSemesterSelect" class="schanzen-hidden-select"></select>
+          </div>
+        </div>
+        
+        <div class="starter-view-field">
+          <label class="starter-view-label">Studiengang</label>
+          <div class="schanzen-dropdown" data-dropdown="starter-faculty">
+            <div class="schanzen-dropdown-container">
+              <span class="schanzen-dropdown-value">Bitte wählen...</span>
+              <div class="schanzen-overlay">
+                <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
+                  <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
+                  <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                </svg>
+                <div class="schanzen-icon-surface">
+                  <svg viewBox="0 0 327 64" preserveAspectRatio="none">
+                    <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
+                  </svg>
+                </div>
+                <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
+              </div>
+            </div>
+            <div class="schanzen-dropdown-menu">
+              <div class="schanzen-dropdown-options" id="starterFacultyOptions"></div>
+            </div>
+            <select id="starterFacultySelect" class="schanzen-hidden-select"></select>
+          </div>
+        </div>
+        
+        <div class="starter-view-field">
+          <label class="starter-view-label">Kursgruppe</label>
+          <div class="schanzen-dropdown" data-dropdown="starter-course">
+            <div class="schanzen-dropdown-container">
+              <span class="schanzen-dropdown-value">Bitte wählen...</span>
+              <div class="schanzen-overlay">
+                <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
+                  <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
+                  <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                </svg>
+                <div class="schanzen-icon-surface">
+                  <svg viewBox="0 0 327 64" preserveAspectRatio="none">
+                    <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
+                  </svg>
+                </div>
+                <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
+              </div>
+            </div>
+            <div class="schanzen-dropdown-menu">
+              <div class="schanzen-dropdown-options" id="starterCourseOptions"></div>
+            </div>
+            <select id="starterCourseSelect" class="schanzen-hidden-select"></select>
+          </div>
+        </div>
+        
+        <button id="starterViewSubmit" class="starter-view-submit" type="button" disabled>
+          <span class="material-symbols-outlined">star</span>
+          Stundenplan auswählen und zu Favoriten hinzufügen
+        </button>
+      </div>
+      
+      <p class="starter-view-note">Deine Auswahl wird automatisch zu deinen Favoriten hinzugefügt</p>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>

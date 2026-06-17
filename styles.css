@@ -146,11 +146,11 @@
 
 .dark #toggleProgressLabel.progress-active,
 .dark #toggleProgressLabelMobile.progress-active {
-  background: rgba(22, 163, 94, 0.15);
+  background: rgba(34, 197, 94, 0.2);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-color: rgba(34, 197, 94, 0.25);
-  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.15), 0 2px 8px rgba(34, 197, 94, 0.1);
+  border-color: rgba(74, 222, 128, 0.4);
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.25), 0 2px 8px rgba(34, 197, 94, 0.15);
   color: #4ade80;
 }
 
@@ -163,6 +163,26 @@
 .dark .study-program-info-icon { background: #1e3a8a; color: #60a5fa; }
 
 .dark .favorite-item-delete { color: #fbbf24; }
+
+/* Dark mode for progress card element */
+.dark .bg-gradient-to-r.from-blue-50.to-indigo-50 {
+  background: linear-gradient(90deg, var(--accent-blue-light) 0%, #1e3a8a 100%) !important;
+}
+.dark .border-blue-200 {
+  border-color: var(--border-color) !important;
+}
+.dark .text-gray-700 {
+  color: var(--text-primary) !important;
+}
+.dark .text-gray-500 {
+  color: var(--text-secondary) !important;
+}
+.dark .bg-gray-200 {
+  background: var(--border-color) !important;
+}
+.dark .bg-\[\#002551\] {
+  background: var(--accent-blue) !important;
+}
 
 /* Mobile event cards dark mode */
 .dark .event-card.online { background: linear-gradient(180deg, #14532d 0%, #1e293b 100%); }
@@ -379,6 +399,183 @@ body { margin: 0; background: var(--bg-primary); color: var(--text-primary); ove
   .event-card.online { background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%); }
   .event-card.exam { background: linear-gradient(180deg, #fef2f2 0%, #ffffff 100%); }
   .event-card.async { background: linear-gradient(180deg, #f5f3ff 0%, #ffffff 100%); }
+
+  /* Dark mode mobile filter panel improvements */
+  .dark #mobileConfigPanel {
+    background: linear-gradient(145deg, var(--bg-secondary), var(--bg-primary));
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+  }
+
+  /* Dark mode mobile buttons */
+  .dark .filter-toggle-mobile {
+    background: linear-gradient(145deg, var(--bg-secondary), var(--bg-primary));
+    border-color: var(--border-color);
+    color: var(--text-primary);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+  .dark .filter-toggle-mobile:hover {
+    background: var(--button-hover);
+    border-color: var(--text-tertiary);
+  }
+
+  /* Dark mode mobile action buttons */
+  .dark #toggleProgressLabelMobile,
+  .dark #currentWeek,
+  .dark #favoritesButtonMobile,
+  .dark #resetCacheMobile,
+  .dark #dozentenplanButtonMobile {
+    background: linear-gradient(145deg, var(--bg-secondary), var(--bg-primary));
+    border-color: var(--border-color);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  .dark #toggleProgressLabelMobile:hover,
+  .dark #currentWeek:hover,
+  .dark #favoritesButtonMobile:hover,
+  .dark #resetCacheMobile:hover,
+  .dark #dozentenplanButtonMobile:hover {
+    background: var(--button-hover);
+    border-color: var(--text-tertiary);
+  }
+
+  /* Dark mode desktop progress button */
+  .dark #toggleProgressLabel {
+    background: linear-gradient(145deg, var(--bg-secondary), var(--bg-primary));
+    border-color: var(--border-color);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  .dark #toggleProgressLabel:hover {
+    background: var(--button-hover);
+    border-color: var(--text-tertiary);
+  }
+
+  /* Dark mode mobile week navigation */
+  .dark .mb-6.flex.items-center.justify-between.rounded-xl {
+    background: linear-gradient(145deg, var(--bg-secondary), var(--bg-primary));
+    border-color: var(--border-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+  .dark .mb-6.flex.items-center.justify-between.rounded-xl .text-sm {
+    color: var(--text-primary);
+  }
+  .dark .mb-6.flex.items-center.justify-between.rounded-xl .rounded-lg {
+    background: transparent;
+  }
+  .dark .mb-6.flex.items-center.justify-between.rounded-xl .rounded-lg:hover {
+    background: var(--button-hover);
+  }
+
+  /* Dark mode mobile search */
+  .dark #searchContainerMobile input {
+    background: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+  }
+  .dark #searchContainerMobile input:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+  }
+  .dark #searchContainerMobile .material-symbols-outlined {
+    color: var(--text-tertiary);
+  }
+
+  /* Dark mode mobile favorites display */
+  .dark #mobileFavoritesDisplay {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+  .dark #mobileFavoritesDisplay .text-xs {
+    color: var(--text-tertiary);
+  }
+  .dark #mobileFavoritesDisplay .text-sm {
+    color: var(--text-secondary);
+  }
+
+  /* Dark mode mobile header */
+  .dark header.md\\:hidden {
+    background: linear-gradient(145deg, var(--header-bg), var(--bg-secondary));
+    border-color: var(--border-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+  .dark header.md\\:hidden .w-10 {
+    background: linear-gradient(145deg, var(--bg-secondary), var(--bg-primary));
+    border-color: var(--border-color);
+  }
+
+  /* Dark mode mobile main content background */
+  .dark main.md\\:hidden {
+    background: var(--bg-primary);
+  }
+
+  /* Dark mode mobile dropdown options */
+  .dark .schanzen-dropdown-option {
+    color: var(--text-primary);
+  }
+  .dark .schanzen-dropdown-option:hover {
+    background: var(--dropdown-hover);
+  }
+  .dark .schanzen-dropdown-option.selected {
+    background: var(--dropdown-selected);
+  }
+
+  /* Dark mode mobile lecturer suggestions */
+  .dark .lecturer-suggestions-mobile {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+  .dark .lecturer-suggestion-item {
+    color: var(--text-primary);
+  }
+  .dark .lecturer-suggestion-item:hover {
+    background: var(--button-hover);
+  }
+  .dark .lecturer-suggestion-item .material-symbols-outlined {
+    color: var(--text-tertiary);
+  }
+
+  /* Dark mode mobile event cards */
+  .dark .event-card {
+    background: linear-gradient(145deg, var(--bg-secondary), var(--bg-primary));
+    border-color: var(--border-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+  .dark .event-card .text-sm {
+    color: var(--text-primary);
+  }
+  .dark .event-card .text-xs {
+    color: var(--text-secondary);
+  }
+
+  /* Dark mode mobile day headers */
+  .dark .day-section .text-lg {
+    color: var(--text-primary);
+  }
+  .dark .day-section .text-sm {
+    color: var(--text-secondary);
+  }
+
+  /* Dark mode mobile week badge */
+  .dark .inline-block.rounded-full {
+    background: var(--accent-blue);
+    color: #ffffff;
+  }
+
+  /* Dark mode mobile progress bars */
+  .dark .weekend-progress-bar {
+    background: linear-gradient(90deg, var(--border-color) 0%, var(--border-secondary) 100%);
+  }
+  .dark [class^="day-progress-bar-"] {
+    background: linear-gradient(90deg, var(--border-color) 0%, var(--border-secondary) 100%);
+  }
+
+  /* Dark mode mobile calendar icon */
+  .dark .material-symbols-outlined.calendar_month {
+    color: var(--text-tertiary);
+  }
   
   /* Mobile filter panel - improved visual design and animation */
   #mobileConfigPanel {
@@ -559,15 +756,198 @@ body { margin: 0; background: var(--bg-primary); color: var(--text-primary); ove
   padding: 0.25rem;
   border-radius: 0.25rem;
   color: #ca8a04;
-  transition: background-color 0.15s ease;
-  border: none;
-  background: transparent;
-  cursor: pointer;
 }
 
-.favorite-item-delete .material-symbols-outlined {
-  font-size: 1.125rem;
-  font-variation-settings: 'FILL' 1;
+/* Starter View Modal Styles */
+.starter-view-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.starter-view-modal.hidden {
+  display: none;
+}
+
+.starter-view-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.starter-view-content {
+  position: relative;
+  background: var(--bg-secondary);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-color);
+  z-index: 1;
+  overflow: visible;
+}
+
+.starter-view-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.starter-view-logo {
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto 1rem;
+  background: var(--bg-primary);
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+}
+
+.starter-view-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.starter-view-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.starter-view-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow: visible;
+}
+
+.starter-view-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow: visible;
+}
+
+.starter-view-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.starter-view-submit {
+  margin-top: 1rem;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-radius: 1rem;
+  background: #002551;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.starter-view-submit:hover:not(:disabled) {
+  background: #003366;
+  transform: translateY(-1px);
+}
+
+.starter-view-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.starter-view-submit:disabled {
+  background: var(--border-secondary);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+.starter-view-note {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  margin-top: 1.5rem;
+}
+
+/* Dark mode for starter view */
+.dark .starter-view-content {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.dark .starter-view-logo {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+}
+
+.dark .starter-view-title {
+  color: var(--text-primary);
+}
+
+.dark .starter-view-subtitle {
+  color: var(--text-secondary);
+}
+
+.dark .starter-view-label {
+  color: var(--text-primary);
+}
+
+.dark .starter-view-submit {
+  background: #1e3a8a;
+}
+
+.dark .starter-view-submit:hover:not(:disabled) {
+  background: #1e40af;
+}
+
+.dark .starter-view-submit:disabled {
+  background: var(--border-secondary);
+  color: var(--text-tertiary);
+}
+
+.dark .starter-view-note {
+  color: var(--text-tertiary);
+}
+
+/* Mobile responsive for starter view */
+@media (max-width: 768px) {
+  .starter-view-content {
+    padding: 1.5rem;
+    border-radius: 1.25rem;
+  }
+
+  .starter-view-title {
+    font-size: 1.25rem;
+  }
+
+  .starter-view-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .starter-view-submit {
+    font-size: 0.875rem;
+    padding: 0.875rem 1.25rem;
+  }
 }
 
 /* Progress button active state with glassmorphism */
@@ -793,6 +1173,19 @@ body { margin: 0; background: var(--bg-primary); color: var(--text-primary); ove
   z-index: 10 !important;
 }
 
+/* Starter View Dropdown z-index */
+.schanzen-dropdown[data-dropdown="starter-semester"] {
+  z-index: 30 !important;
+}
+
+.schanzen-dropdown[data-dropdown="starter-faculty"] {
+  z-index: 20 !important;
+}
+
+.schanzen-dropdown[data-dropdown="starter-course"] {
+  z-index: 10 !important;
+}
+
 /* Ensure label elements don't clip dropdowns */
 label.block {
   overflow: visible !important;
@@ -987,7 +1380,8 @@ label.block {
   transition:
     opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
     transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: visible !important;
+  overflow-y: auto;
+  max-height: 300px;
   min-width: 100%;
   max-width: 300px;
   -webkit-overflow-scrolling: touch;
@@ -1002,7 +1396,7 @@ label.block {
 
 .schanzen-dropdown-options {
   padding: 0.5rem;
-  overflow: visible !important;
+  overflow: visible;
   z-index: 9999;
   position: relative;
 }
