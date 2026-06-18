@@ -126,7 +126,7 @@
 .dark .week-badge { background: #1e3a8a; color: #93c5fd; }
 
 .dark .event-item.online { background: linear-gradient(180deg, #14532d 0%, #1e293b 100%); border-left-color: #22c55e; border-color: #166534; }
-.dark .event-item.exam { border-left-color: #ef4444; }
+.dark .event-item.exam { background: linear-gradient(180deg, #7f1d1d 0%, #1e293b 100%); border-left-color: #ef4444; border-color: #991b1b; }
 .dark .event-item.async { background: linear-gradient(180deg, #581c87 0%, #1e293b 100%); border-left-color: #a855f7; border-color: #6b21a8; }
 .dark .event-item.wegzeit { background: linear-gradient(180deg, #1e293b 0%, #14532d 100%); }
 
@@ -260,7 +260,7 @@ body { margin: 0; background: var(--bg-primary); color: var(--text-primary); ove
 .event-item { position: absolute; left: 0.65rem; right: 0.65rem; padding: 0.8rem 0.95rem 0.8rem 0.5rem; border-radius: 1rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-left-width: 4px; border-left-color: #3b82f6; box-shadow: 0 18px 40px var(--shadow-color); overflow: visible; transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
 .event-item:hover { transform: translateY(-1px); box-shadow: 0 22px 45px var(--shadow-hover); }
 .event-item.online { background: linear-gradient(180deg, #ecfdf5 0%, #f8fafc 100%); border-left-color: #34d399; border-color: #bbf7d0; }
-.event-item.exam { border-left-color: #ef4444; }
+.event-item.exam { background: linear-gradient(180deg, #fef2f2 0%, #f8fafc 100%); border-left-color: #ef4444; border-color: #fecaca; }
 .event-item.async { background: linear-gradient(180deg, #f5f3ff 0%, #f8fafc 100%); border-left-color: #a78bfa; border-color: #ddd6fe; }
 .event-item.wegzeit { background: linear-gradient(180deg, #ffffff 0%, #dcfce7 100%) !important; border: none !important; border-left: none !important; border-left-width: 0 !important; border-left-color: transparent !important; position: relative; box-shadow: none !important; }
 .event-item.wegzeit::before { content: ''; position: absolute; inset: 0; border-radius: 1rem; background: radial-gradient(ellipse at center, transparent 40%, rgba(255, 255, 255, 0.7) 100%); pointer-events: none; }
@@ -1701,4 +1701,217 @@ label.block {
 .lecturer-suggestions::-webkit-scrollbar-thumb:hover,
 .lecturer-suggestions-mobile::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Settings Modal Styles */
+.settings-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.settings-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.settings-content {
+  position: relative;
+  background: var(--bg-secondary);
+  border-radius: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  background: var(--accent-blue-light);
+  border-radius: 0.75rem;
+}
+
+.settings-logo .material-symbols-outlined {
+  font-size: 1.5rem;
+  color: var(--accent-blue);
+}
+
+.settings-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.settings-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--button-bg);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.settings-close:hover {
+  background: var(--button-hover);
+}
+
+.settings-close .material-symbols-outlined {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+}
+
+.settings-body {
+  padding: 1.5rem;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  text-align: left;
+}
+
+.settings-item:hover {
+  background: var(--button-hover);
+  border-color: var(--text-tertiary);
+}
+
+.settings-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--accent-blue-light);
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+}
+
+.settings-item-icon .material-symbols-outlined {
+  font-size: 1.25rem;
+  color: var(--accent-blue);
+}
+
+.settings-item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.settings-item-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.settings-item-description {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Dark mode for settings modal */
+.dark .settings-content {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.dark .settings-header {
+  border-color: var(--border-color);
+}
+
+.dark .settings-title {
+  color: var(--text-primary);
+}
+
+.dark .settings-close {
+  background: var(--button-bg);
+}
+
+.dark .settings-close:hover {
+  background: var(--button-hover);
+}
+
+.dark .settings-close .material-symbols-outlined {
+  color: var(--text-secondary);
+}
+
+.dark .settings-item {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+}
+
+.dark .settings-item:hover {
+  background: var(--button-hover);
+  border-color: var(--text-tertiary);
+}
+
+.dark .settings-item-icon {
+  background: var(--accent-blue-light);
+}
+
+.dark .settings-item-icon .material-symbols-outlined {
+  color: var(--accent-blue);
+}
+
+.dark .settings-item-title {
+  color: var(--text-primary);
+}
+
+.dark .settings-item-description {
+  color: var(--text-secondary);
 }

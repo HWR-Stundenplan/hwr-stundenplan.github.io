@@ -24,8 +24,8 @@
           </div>
           <h1 class="text-3xl font-bold tracking-tight">Kursübersicht</h1>
         </div>
-        <button id="darkModeToggleDesktop" class="dark-mode-toggle" type="button" aria-label="Dark Mode umschalten">
-          <span class="material-symbols-outlined">dark_mode</span>
+        <button id="settingsButtonDesktop" type="button" aria-label="Einstellungen öffnen" style="display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: 999px; border: 1px solid var(--border-secondary); background: var(--button-bg); cursor: pointer;">
+          <span class="material-symbols-outlined" style="font-size: 1.25rem; color: var(--text-secondary);">settings</span>
         </button>
       </div>
     </div>
@@ -59,12 +59,6 @@
               </button>
               <button id="favoritesButton" class="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100" type="button">
                 <span class="material-symbols-outlined">star</span> Favoriten
-              </button>
-              <button id="exportCalendar" class="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100" type="button">
-                <span class="material-symbols-outlined">event</span> Kalender exportieren
-              </button>
-              <button id="resetCache" class="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100" type="button">
-                <span class="material-symbols-outlined">refresh</span> Cache löschen
               </button>
               <button id="dozentenplanButton" class="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100" type="button">
                 <span class="material-symbols-outlined">person_search</span> Dozentenplan
@@ -489,6 +483,56 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="settings-modal hidden">
+    <div class="settings-overlay"></div>
+    <div class="settings-content">
+      <div class="settings-header">
+        <div class="settings-logo">
+          <span class="material-symbols-outlined">settings</span>
+        </div>
+        <h2 class="settings-title">Einstellungen</h2>
+        <button id="closeSettings" class="settings-close" type="button" aria-label="Einstellungen schließen">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      
+      <div class="settings-body">
+        <div class="settings-section">
+          <button id="darkModeToggleSettings" class="settings-item" type="button">
+            <div class="settings-item-icon">
+              <span class="material-symbols-outlined">dark_mode</span>
+            </div>
+            <div class="settings-item-content">
+              <span class="settings-item-title">Dark Mode / Light Mode</span>
+              <span class="settings-item-description">Design umschalten</span>
+            </div>
+          </button>
+          
+          <button id="exportCalendarSettings" class="settings-item" type="button">
+            <div class="settings-item-icon">
+              <span class="material-symbols-outlined">event</span>
+            </div>
+            <div class="settings-item-content">
+              <span class="settings-item-title">Kalender exportieren</span>
+              <span class="settings-item-description">Stundenplan als ICS-Datei herunterladen</span>
+            </div>
+          </button>
+          
+          <button id="resetCacheSettings" class="settings-item" type="button">
+            <div class="settings-item-icon">
+              <span class="material-symbols-outlined">refresh</span>
+            </div>
+            <div class="settings-item-content">
+              <span class="settings-item-title">Cache löschen</span>
+              <span class="settings-item-description">Gespeicherte Daten entfernen</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
 </body>
 </html>

@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body class="bg-slate-50 text-slate-950">
   <div class="min-h-screen">
@@ -24,9 +24,12 @@
           </div>
           <div class="flex items-center gap-3">
             <h1 class="text-3xl font-bold tracking-tight">Dozentenplan</h1>
-            <a href="index.html" class="text-sm text-white/70 hover:text-white transition">← Zurück zum Stundenplan</a>
+            <a href="../html/index.html" class="text-sm text-white/70 hover:text-white transition">← Zurück zum Stundenplan</a>
           </div>
         </div>
+        <button id="settingsButtonDesktop" type="button" aria-label="Einstellungen öffnen" style="display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: 999px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); cursor: pointer;">
+          <span class="material-symbols-outlined" style="font-size: 1.25rem; color: white;">settings</span>
+        </button>
       </div>
     </div>
 
@@ -38,7 +41,12 @@
         </div>
         <span class="text-xl font-bold text-[#002551] tracking-tight">Dozentenplan</span>
       </div>
-      <a href="index.html" class="text-sm text-[#002551] hover:text-[#003366] transition">← Zurück</a>
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="text-sm text-[#002551] hover:text-[#003366] transition">← Zurück</a>
+        <button id="darkModeToggleMobile" class="dark-mode-toggle" type="button" aria-label="Dark Mode umschalten">
+          <span class="material-symbols-outlined">dark_mode</span>
+        </button>
+      </div>
     </header>
 
     <!-- Desktop Main -->
@@ -155,6 +163,46 @@
         <!-- Days will be rendered here -->
       </div>
     </main>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="settings-modal hidden">
+    <div class="settings-overlay"></div>
+    <div class="settings-content">
+      <div class="settings-header">
+        <div class="settings-logo">
+          <span class="material-symbols-outlined">settings</span>
+        </div>
+        <h2 class="settings-title">Einstellungen</h2>
+        <button id="closeSettings" class="settings-close" type="button" aria-label="Einstellungen schließen">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="settings-body">
+        <div class="settings-section">
+          <button id="darkModeToggleSettings" class="settings-item" type="button">
+            <div class="settings-item-icon">
+              <span class="material-symbols-outlined">dark_mode</span>
+            </div>
+            <div class="settings-item-content">
+              <span class="settings-item-title">Dark Mode / Light Mode</span>
+              <span class="settings-item-description">Design umschalten</span>
+            </div>
+          </button>
+
+          <button id="resetCacheSettings" class="settings-item" type="button">
+            <div class="settings-item-icon">
+              <span class="material-symbols-outlined">refresh</span>
+            </div>
+            <div class="settings-item-content">
+              <span class="settings-item-title">Cache löschen</span>
+              <span class="settings-item-description">Gespeicherte Daten entfernen</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="dozentenplan.js"></script>
