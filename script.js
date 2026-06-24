@@ -195,8 +195,9 @@ function initializeSchanzenDropdown(dropdownId, selectId, optionsId) {
         dropdownMenu.style.display = 'block';
         dropdownMenu.style.opacity = '1';
         dropdownMenu.style.pointerEvents = 'auto';
-        dropdownMenu.style.overflow = 'visible';
-        dropdownMenu.style.maxHeight = 'none';
+        dropdownMenu.style.overflow = 'auto';
+        // Set max-height to show approximately 6.5 items for scrollability
+        dropdownMenu.style.maxHeight = '290px';
       }
       if (optionsContainer) {
         optionsContainer.style.overflow = 'visible';

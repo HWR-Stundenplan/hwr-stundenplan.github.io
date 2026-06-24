@@ -540,6 +540,13 @@ async function init() {
       });
     }
 
+    const toggleBtn = document.getElementById('toggle-btn');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('change', () => {
+        toggleDarkMode();
+      });
+    }
+
     if (showAllEventsButton) {
       showAllEventsButton.addEventListener('click', () => {
         showAllEvents = !showAllEvents;
@@ -948,9 +955,15 @@ async function init() {
 
     // Dark mode
     initializeDarkMode();
-    const mobileToggle = document.getElementById('darkModeToggleMobile');
-    if (mobileToggle) {
-      mobileToggle.addEventListener('click', toggleDarkMode);
+
+    // Mobile settings button
+    const settingsButtonMobile = document.getElementById('settingsButtonMobile');
+    if (settingsButtonMobile) {
+      settingsButtonMobile.addEventListener('click', () => {
+        if (settingsModal) {
+          settingsModal.classList.remove('hidden');
+        }
+      });
     }
 
     const cached = loadCachedSelection();
@@ -1056,3 +1069,4 @@ async function init() {
 }
 
 window.addEventListener('DOMContentLoaded', init);
+

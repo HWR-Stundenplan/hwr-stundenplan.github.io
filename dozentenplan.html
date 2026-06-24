@@ -6,11 +6,120 @@
   <title>HWR Berlin Dozentenplan – Mobil & Schnell</title>
   <meta name="description" content="Der Dozentenplan für die HWR Berlin. Sieh die Veranstaltungen eines Dozenten auf einen Blick optimiert fürs Smartphone.">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    (function() {
+      const DARK_MODE_KEY = 'st-plan-dark-mode';
+      const savedDarkMode = localStorage.getItem(DARK_MODE_KEY);
+      if (savedDarkMode === 'true' || (!savedDarkMode && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
+  
+  <style>
+    /* --- DARK/LIGHT MODE TOGGLE SWITCH STYLES --- */
+    .toggle-wrapper {
+      position: relative;
+      width: 16rem;
+      height: 8rem;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    input[type="checkbox"]#toggle-btn {
+      position: absolute;
+      z-index: 100;
+      width: 100%;
+      height: 7rem;
+      cursor: pointer;
+      opacity: 0;
+      top: 0;
+      left: 0;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 16rem;
+      height: 7rem;
+      border-radius: 3.5rem;
+      background-color: #1d2532;
+      box-shadow: inset 0 0 7rem 7rem rgba(0, 0, 0, 0.3),
+                  inset 0 0.8rem 0.4rem rgba(0, 0, 0, 0.3),
+                  inset 0 3rem 1rem rgba(0, 0, 0, 0.25),
+                  0 -0.25em 0.25em rgba(0, 0, 0, 0.2),
+                  0 0.25em 0.25em rgba(255, 255, 255, 0.08);
+      transition: all 300ms ease-out;
+    }
+
+    .toggle-switch::before {
+      content: "";
+      position: absolute;
+      top: 0.25rem;
+      left: 0.25rem;
+      width: 6.5rem;
+      height: 6.5rem;
+      border-radius: 3.25rem;
+      background-color: #263141;
+      box-shadow: inset 0 0.25rem 0.25rem rgba(255, 255, 255, 0.08),
+                  inset 0 -0.25rem 0.25rem rgba(0, 0, 0, 0.2),
+                  0 0.6rem 0.4rem rgba(0, 0, 0, 0.5),
+                  0 1.25rem 1rem rgba(0, 0, 0, 0.5);
+      transition: left 300ms ease-out, background-color 300ms ease-out, box-shadow 300ms ease-out;
+    }
+
+    input[type="checkbox"]#toggle-btn:checked ~ .toggle-switch {
+      background-color: #dedad3;
+      box-shadow: inset 0 0 7rem 7rem rgba(0, 0, 0, 0.1),
+                  inset 0 0.8rem 0.4rem rgba(0, 0, 0, 0.2),
+                  inset 0 3rem 1rem rgba(0, 0, 0, 0.1),
+                  0 -0.25em 0.25em rgba(0, 0, 0, 0.15),
+                  0 0.25em 0.25em rgba(255, 255, 255, 0.4);
+    }
+
+    input[type="checkbox"]#toggle-btn:checked ~ .toggle-switch::before {
+      left: 9.25rem;
+      background-color: #d5d1ca;
+      box-shadow: inset 0 0.25rem 0.25rem rgba(255, 255, 255, 0.4),
+                  inset 0 -0.25rem 0.25rem rgba(0, 0, 0, 0.15),
+                  0 0.6rem 0.4rem rgba(0, 0, 0, 0.25),
+                  0 1.25rem 1rem rgba(0, 0, 0, 0.25);
+    }
+
+    input[type="radio"].style-radio {
+      display: none;
+    }
+
+    .toggle-styles {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .toggle-styles label {
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: rgba(0, 0, 0, 0.5);
+      transition: color 300ms ease-out;
+      padding: 0.25rem;
+    }
+
+    input[type="radio"]#skeuomorphism:checked ~ .toggle-styles label[for="skeuomorphism"],
+    input[type="radio"]#neumorphism:checked ~ .toggle-styles label[for="neumorphism"] {
+      color: rgba(0, 0, 0, 0.9);
+      font-weight: 800;
+    }
+  </style>
 </head>
 <body class="bg-slate-50 text-slate-950">
   <div class="min-h-screen">
@@ -52,7 +161,7 @@
     <!-- Desktop Main -->
     <main class="hidden md:block mx-auto max-w-[1480px] px-4 pb-16 pt-8 sm:px-6 lg:px-8">
       <section id="pageLayout" class="grid gap-6">
-        <div class="space-y-4 rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm">
+        <div class="space-y-4">
           <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Dozentensuche</p>
@@ -85,7 +194,7 @@
           </div>
         </div>
 
-        <div class="space-y-4 rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm">
+        <div class="space-y-4">
           <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Wochenansicht</p>
@@ -181,7 +290,7 @@
 
       <div class="settings-body">
         <div class="settings-section">
-          <button id="darkModeToggleSettings" class="settings-item" type="button">
+          <div class="settings-item">
             <div class="settings-item-icon">
               <span class="material-symbols-outlined">dark_mode</span>
             </div>
@@ -189,7 +298,18 @@
               <span class="settings-item-title">Dark Mode / Light Mode</span>
               <span class="settings-item-description">Design umschalten</span>
             </div>
-          </button>
+          </div>
+
+          <div class="toggle-wrapper">
+            <input type="checkbox" id="toggle-btn" />
+            <input type="radio" name="style-select" id="skeuomorphism" class="style-radio" checked />
+            <input type="radio" name="style-select" id="neumorphism" class="style-radio" />
+            <div class="toggle-switch"></div>
+            <div class="toggle-styles">
+              <label for="skeuomorphism">Skeuomorphism</label>
+              <label for="neumorphism">Neumorphism</label>
+            </div>
+          </div>
 
           <button id="resetCacheSettings" class="settings-item" type="button">
             <div class="settings-item-icon">

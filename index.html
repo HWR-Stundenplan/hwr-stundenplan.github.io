@@ -6,6 +6,15 @@
   <title>HWR Berlin Stundenplan – Mobil & Schnell</title>
   <meta name="description" content="Der schnellste mobile Stundenplan für die HWR Berlin. Sieh deine Vorlesungen, Räume und Dozenten auf einen Blick optimiert fürs Smartphone.">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    (function() {
+      const DARK_MODE_KEY = 'st-plan-dark-mode';
+      const savedDarkMode = localStorage.getItem(DARK_MODE_KEY);
+      if (savedDarkMode === 'true' || (!savedDarkMode && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -24,9 +33,16 @@
           </div>
           <h1 class="text-3xl font-bold tracking-tight">Kursübersicht</h1>
         </div>
-        <button id="settingsButtonDesktop" type="button" aria-label="Einstellungen öffnen" style="display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: 999px; border: 1px solid var(--border-secondary); background: var(--button-bg); cursor: pointer;">
-          <span class="material-symbols-outlined" style="font-size: 1.25rem; color: var(--text-secondary);">settings</span>
-        </button>
+        <div class="flex items-center gap-6">
+          <div class="flex items-center gap-5">
+            <button id="toggleProgressLabel" type="button" class="header-link">Tagesfortschritt</button>
+            <button id="favoritesButton" type="button" class="header-link">Favoriten</button>
+            <button id="dozentenplanButton" type="button" class="header-link">Dozentenplan</button>
+          </div>
+          <button id="settingsButtonDesktop" type="button" aria-label="Einstellungen öffnen" style="display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: 999px; border: 1px solid var(--border-secondary); background: var(--button-bg); cursor: pointer;">
+            <span class="material-symbols-outlined" style="font-size: 1.25rem; color: var(--text-secondary);">settings</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -38,125 +54,93 @@
         </div>
         <span class="text-xl font-bold tracking-tight" style="color: var(--text-primary);">Kursübersicht</span>
       </div>
-      <button id="darkModeToggleMobile" class="dark-mode-toggle" type="button" aria-label="Dark Mode umschalten">
-        <span class="material-symbols-outlined">dark_mode</span>
+      <button id="settingsButtonMobile" type="button" aria-label="Einstellungen öffnen" style="display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: 999px; border: 1px solid var(--border-secondary); background: var(--button-bg); cursor: pointer;">
+        <span class="material-symbols-outlined" style="font-size: 1.25rem; color: var(--text-secondary);">settings</span>
       </button>
     </header>
 
     <!-- Desktop Main -->
     <main class="hidden md:block mx-auto max-w-[1480px] px-4 pb-16 pt-8 sm:px-6 lg:px-8">
       <section id="pageLayout" class="grid gap-6">
-        <div id="configPanel" class="space-y-4 rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm collapsed">
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Filter</p>
-              <h2 class="mt-2 text-2xl font-semibold text-slate-950">Stundenplan konfigurieren</h2>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <button id="toggleFilterButton" class="filter-toggle" type="button" aria-expanded="false"><span class="material-symbols-outlined toggle-icon">expand_more</span>Filter</button>
-              <button id="toggleProgressLabel" class="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100" type="button">
-                <span class="material-symbols-outlined">percent</span> Tagesfortschritt
-              </button>
-              <button id="favoritesButton" class="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100" type="button">
-                <span class="material-symbols-outlined">star</span> Favoriten
-              </button>
-              <button id="dozentenplanButton" class="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100" type="button">
-                <span class="material-symbols-outlined">person_search</span> Dozentenplan
-              </button>
-            </div>
-          </div>
-          <!-- Favorites Display -->
-          <div id="desktopFavoritesDisplay" class="hidden rounded-xl bg-white p-3 border border-slate-200 mb-4">
-            <div class="mb-3">
-              <button id="addToFavoritesDesktopPanel" class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#002551] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#003366]" type="button">
-                Hinzufügen
-              </button>
-              <p id="currentFavoriteLabelDesktop" class="text-xs text-slate-400 text-center mt-1"></p>
-            </div>
-            <div id="favoritesListDesktopPanel" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-              <p class="text-sm text-slate-500 text-center py-2 w-full">Keine Favoriten gespeichert</p>
-            </div>
-          </div>
 
-          <div id="configContent" class="space-y-4">
-            <div class="grid gap-4 md:grid-cols-3">
-              <label class="block">
-                <span class="mb-2 block text-sm font-medium text-slate-700">Semester</span>
-                <div class="schanzen-dropdown" data-dropdown="semester">
-                  <div class="schanzen-dropdown-container">
-                    <span class="schanzen-dropdown-value">Bitte wählen...</span>
-                    <div class="schanzen-overlay">
-                      <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
-                        <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
-                        <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+        <div>
+          <div class="grid gap-4 md:grid-cols-3">
+            <label>
+              <span class="mb-2 block text-sm font-medium text-slate-700">Semester</span>
+              <div class="schanzen-dropdown" data-dropdown="semester">
+                <div class="schanzen-dropdown-container">
+                  <span class="schanzen-dropdown-value">Bitte wählen...</span>
+                  <div class="schanzen-overlay">
+                    <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
+                      <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
+                      <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                    </svg>
+                    <div class="schanzen-icon-surface">
+                      <svg viewBox="0 0 327 64" preserveAspectRatio="none">
+                        <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
                       </svg>
-                      <div class="schanzen-icon-surface">
-                        <svg viewBox="0 0 327 64" preserveAspectRatio="none">
-                          <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
-                        </svg>
-                      </div>
-                      <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
                     </div>
+                    <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
                   </div>
-                  <div class="schanzen-dropdown-menu">
-                    <div class="schanzen-dropdown-options" id="semesterOptions"></div>
-                  </div>
-                  <select id="semesterSelect" class="schanzen-hidden-select"></select>
                 </div>
-              </label>
-              <label class="block">
-                <span class="mb-2 block text-sm font-medium text-slate-700">Studiengang</span>
-                <div class="schanzen-dropdown" data-dropdown="faculty">
-                  <div class="schanzen-dropdown-container">
-                    <span class="schanzen-dropdown-value">Bitte wählen...</span>
-                    <div class="schanzen-overlay">
-                      <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
-                        <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
-                        <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                <div class="schanzen-dropdown-menu">
+                  <div class="schanzen-dropdown-options" id="semesterOptions"></div>
+                </div>
+                <select id="semesterSelect" class="schanzen-hidden-select"></select>
+              </div>
+            </label>
+            <label>
+              <span class="mb-2 block text-sm font-medium text-slate-700">Studiengang</span>
+              <div class="schanzen-dropdown" data-dropdown="faculty">
+                <div class="schanzen-dropdown-container">
+                  <span class="schanzen-dropdown-value">Bitte wählen...</span>
+                  <div class="schanzen-overlay">
+                    <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
+                      <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
+                      <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                    </svg>
+                    <div class="schanzen-icon-surface">
+                      <svg viewBox="0 0 327 64" preserveAspectRatio="none">
+                        <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
                       </svg>
-                      <div class="schanzen-icon-surface">
-                        <svg viewBox="0 0 327 64" preserveAspectRatio="none">
-                          <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
-                        </svg>
-                      </div>
-                      <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
                     </div>
+                    <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
                   </div>
-                  <div class="schanzen-dropdown-menu">
-                    <div class="schanzen-dropdown-options" id="facultyOptions"></div>
-                  </div>
-                  <select id="facultySelect" class="schanzen-hidden-select"></select>
                 </div>
-              </label>
-              <label class="block">
-                <span class="mb-2 block text-sm font-medium text-slate-700">Kursgruppe</span>
-                <div class="schanzen-dropdown" data-dropdown="course">
-                  <div class="schanzen-dropdown-container">
-                    <span class="schanzen-dropdown-value">Bitte wählen...</span>
-                    <div class="schanzen-overlay">
-                      <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
-                        <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
-                        <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                <div class="schanzen-dropdown-menu">
+                  <div class="schanzen-dropdown-options" id="facultyOptions"></div>
+                </div>
+                <select id="facultySelect" class="schanzen-hidden-select"></select>
+              </div>
+            </label>
+            <label>
+              <span class="mb-2 block text-sm font-medium text-slate-700">Kursgruppe</span>
+              <div class="schanzen-dropdown" data-dropdown="course">
+                <div class="schanzen-dropdown-container">
+                  <span class="schanzen-dropdown-value">Bitte wählen...</span>
+                  <div class="schanzen-overlay">
+                    <svg class="schanzen-svg" viewBox="0 0 327 64" preserveAspectRatio="none">
+                      <path class="schanzen-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#e8eaf0"/>
+                      <path class="schanzen-highlight" d="M 285 0 C 251 15, 257 48, 212 64" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                    </svg>
+                    <div class="schanzen-icon-surface">
+                      <svg viewBox="0 0 327 64" preserveAspectRatio="none">
+                        <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
                       </svg>
-                      <div class="schanzen-icon-surface">
-                        <svg viewBox="0 0 327 64" preserveAspectRatio="none">
-                          <path class="surface-path" d="M 285 0 C 251 15, 257 48, 212 64 L 295 64 C 312.67 64, 327 49.67, 327 32 C 327 14.33, 312.67 0, 295 0 Z" fill="#ffffff"/>
-                        </svg>
-                      </div>
-                      <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
                     </div>
+                    <span class="schanzen-dropdown-icon material-symbols-outlined">expand_more</span>
                   </div>
-                  <div class="schanzen-dropdown-menu">
-                    <div class="schanzen-dropdown-options" id="courseOptions"></div>
-                  </div>
-                  <select id="courseSelect" class="schanzen-hidden-select"></select>
                 </div>
-              </label>
-            </div>
+                <div class="schanzen-dropdown-menu">
+                  <div class="schanzen-dropdown-options" id="courseOptions"></div>
+                </div>
+                <select id="courseSelect" class="schanzen-hidden-select"></select>
+              </div>
+            </label>
           </div>
         </div>
 
-        <div class="space-y-4 rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-sm">
+        <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p class="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Wochenansicht</p>
@@ -257,7 +241,7 @@
         </div>
         <div id="mobileConfigContent" class="space-y-5">
           <div class="grid gap-4">
-            <label class="block">
+            <label>
               <span class="mb-2 block text-xs font-medium text-gray-700">Semester</span>
               <div class="schanzen-dropdown" data-dropdown="semester-mobile">
                 <div class="schanzen-dropdown-container">
@@ -281,7 +265,7 @@
                 <select id="semesterSelectMobile" class="schanzen-hidden-select"></select>
               </div>
             </label>
-            <label class="block">
+            <label>
               <span class="mb-2 block text-xs font-medium text-gray-700">Studiengang</span>
               <div class="schanzen-dropdown" data-dropdown="faculty-mobile">
                 <div class="schanzen-dropdown-container">
@@ -305,7 +289,7 @@
                 <select id="facultySelectMobile" class="schanzen-hidden-select"></select>
               </div>
             </label>
-            <label class="block">
+            <label>
               <span class="mb-2 block text-xs font-medium text-gray-700">Kursgruppe</span>
               <div class="schanzen-dropdown" data-dropdown="course-mobile">
                 <div class="schanzen-dropdown-container">
@@ -474,12 +458,9 @@
         </div>
         
         <button id="starterViewSubmit" class="starter-view-submit" type="button" disabled>
-          <span class="material-symbols-outlined">star</span>
-          Stundenplan auswählen und zu Favoriten hinzufügen
+          Weiter
         </button>
       </div>
-      
-      <p class="starter-view-note">Deine Auswahl wird automatisch zu deinen Favoriten hinzugefügt</p>
     </div>
   </div>
 

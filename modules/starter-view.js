@@ -9,6 +9,9 @@ export function initializeStarterView(data, maxSemester, cacheKey) {
   if (!modal) return;
 
   modal.classList.remove('hidden');
+  // Block body scroll when modal is open
+  document.body.classList.add('modal-open');
+  document.documentElement.classList.add('modal-open');
 
   const semesterSelect = document.getElementById('starterSemesterSelect');
   const facultySelect = document.getElementById('starterFacultySelect');
@@ -85,6 +88,9 @@ export function initializeStarterView(data, maxSemester, cacheKey) {
     markStarterViewCompleted();
 
     modal.classList.add('hidden');
+    // Restore body scroll when modal is closed
+    document.body.classList.remove('modal-open');
+    document.documentElement.classList.remove('modal-open');
     location.reload();
   });
 }
