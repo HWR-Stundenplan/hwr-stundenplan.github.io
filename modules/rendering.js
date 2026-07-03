@@ -97,10 +97,6 @@ function updateDateLabels(weekStart) {
   const dateRangeLabelMobile = document.getElementById('dateRangeLabelMobile');
   const weekBadge = document.getElementById('weekBadge');
   const weekBadgeMobile = document.getElementById('weekBadgeMobile');
-  const dateRangeLabelBottom = document.getElementById('dateRangeLabelBottom');
-  const dateRangeLabelMobileBottom = document.getElementById('dateRangeLabelMobileBottom');
-  const weekBadgeBottom = document.getElementById('weekBadgeBottom');
-  const weekBadgeMobileBottom = document.getElementById('weekBadgeMobileBottom');
   
   if (dateRangeLabel) {
     dateRangeLabel.textContent = formatDateRange(weekStart);
@@ -113,18 +109,6 @@ function updateDateLabels(weekStart) {
   }
   if (weekBadgeMobile) {
     weekBadgeMobile.textContent = `KW ${String(getWeekNumber(weekStart)).padStart(2, '0')}`;
-  }
-  if (dateRangeLabelBottom) {
-    dateRangeLabelBottom.textContent = formatDateRange(weekStart);
-  }
-  if (dateRangeLabelMobileBottom) {
-    dateRangeLabelMobileBottom.textContent = formatDateRange(weekStart);
-  }
-  if (weekBadgeBottom) {
-    weekBadgeBottom.textContent = `KW ${String(getWeekNumber(weekStart)).padStart(2, '0')}`;
-  }
-  if (weekBadgeMobileBottom) {
-    weekBadgeMobileBottom.textContent = `KW ${String(getWeekNumber(weekStart)).padStart(2, '0')}`;
   }
 }
 

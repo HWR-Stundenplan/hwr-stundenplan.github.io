@@ -294,8 +294,8 @@
   color: var(--text-secondary);
 }
 
-html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--bg-primary); color: var(--text-primary); overflow-x: hidden; }
+html { scroll-behavior: smooth; overflow-x: hidden; overflow-y: auto; }
+body { margin: 0; background: var(--bg-primary); color: var(--text-primary); overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
 .schedule-table-container { overflow-x: auto; border-radius: 0.2rem; margin-top: 1.5rem; }
 
@@ -645,11 +645,35 @@ body { margin: 0; background: var(--bg-primary); color: var(--text-primary); ove
     color: var(--text-tertiary);
   }
   
-  /* Mobile filter panel - improved visual design and animation */
+/* Glassmorphism effect */
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    inset 0 2px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode glassmorphism */
+.dark .glass-morphism {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Mobile filter panel - improved visual design and animation */
   #mobileConfigPanel {
     position: static;
     background: var(--bg-secondary);
-    border-radius: 16rem;
+    border-radius: 1.5rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
     padding: 20px;
     margin-bottom: 24px;
@@ -683,10 +707,13 @@ body { margin: 0; background: var(--bg-primary); color: var(--text-primary); ove
     transform: rotate(180deg);
   }
 
-  /* Ensure filter button container doesn't block navigation when panel is collapsed */
-  #mobileFilterButtonContainer {
-    position: relative;
-    z-index: 10;
+  /* Progress checkbox styling */
+  #toggleProgressLabelMobile {
+    cursor: pointer;
+  }
+  #toggleProgressLabelMobile:checked {
+    background-color: #16a34a;
+    border-color: #16a34a;
   }
 
   /* Ensure mobile week navigation is always clickable */

@@ -294,8 +294,6 @@ async function init() {
     const courseSelect = document.getElementById('courseSelect');
     const prevButton = document.getElementById('prevWeek');
     const nextButton = document.getElementById('nextWeek');
-    const prevButtonBottom = document.getElementById('prevWeekBottom');
-    const nextButtonBottom = document.getElementById('nextWeekBottom');
     const showAllEventsButton = document.getElementById('showAllEvents');
     const searchInput = document.getElementById('searchInput');
     const clearSearchButton = document.getElementById('clearSearch');
@@ -319,8 +317,6 @@ async function init() {
     const courseSelectMobile = document.getElementById('courseSelectMobile');
     const prevButtonMobile = document.getElementById('prevWeekMobile');
     const nextButtonMobile = document.getElementById('nextWeekMobile');
-    const prevButtonMobileBottom = document.getElementById('prevWeekMobileBottom');
-    const nextButtonMobileBottom = document.getElementById('nextWeekMobileBottom');
     const resetButtonMobile = document.getElementById('resetCacheMobile');
     const showAllEventsButtonMobile = document.getElementById('showAllEventsMobile');
     const currentWeekButton = document.getElementById('currentWeek');
@@ -466,25 +462,13 @@ async function init() {
       });
     }
 
-    if (prevButtonBottom) {
-      prevButtonBottom.addEventListener('click', () => {
-        currentWeekStart = addDays(currentWeekStart, -7);
-        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false, showAllEvents);
-      });
-    }
-
-    if (nextButtonBottom) {
-      nextButtonBottom.addEventListener('click', () => {
-        currentWeekStart = addDays(currentWeekStart, 7);
-        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false, showAllEvents);
-      });
-    }
-
     // Settings Modal
     if (settingsButtonDesktop) {
       settingsButtonDesktop.addEventListener('click', () => {
         if (settingsModal) {
           settingsModal.classList.remove('hidden');
+          document.body.classList.add('modal-open');
+          document.documentElement.classList.add('modal-open');
         }
       });
     }
@@ -493,6 +477,8 @@ async function init() {
       closeSettings.addEventListener('click', () => {
         if (settingsModal) {
           settingsModal.classList.add('hidden');
+          document.body.classList.remove('modal-open');
+          document.documentElement.classList.remove('modal-open');
         }
       });
     }
@@ -501,6 +487,8 @@ async function init() {
       settingsModal.addEventListener('click', (e) => {
         if (e.target === settingsModal || e.target.classList.contains('settings-overlay')) {
           settingsModal.classList.add('hidden');
+          document.body.classList.remove('modal-open');
+          document.documentElement.classList.remove('modal-open');
         }
       });
     }
@@ -749,30 +737,6 @@ async function init() {
       });
     }
 
-    if (prevButtonMobileBottom) {
-      prevButtonMobileBottom.addEventListener('click', () => {
-        currentWeekStart = addDays(currentWeekStart, -7);
-        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false, showAllEvents);
-      });
-      prevButtonMobileBottom.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        currentWeekStart = addDays(currentWeekStart, -7);
-        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false, showAllEvents);
-      });
-    }
-
-    if (nextButtonMobileBottom) {
-      nextButtonMobileBottom.addEventListener('click', () => {
-        currentWeekStart = addDays(currentWeekStart, 7);
-        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false, showAllEvents);
-      });
-      nextButtonMobileBottom.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        currentWeekStart = addDays(currentWeekStart, 7);
-        renderSchedule(data, activeSource, currentWeekStart, searchQuery, false, showAllEvents);
-      });
-    }
-
     if (resetButtonMobile) {
       resetButtonMobile.addEventListener('click', () => {
         try {
@@ -864,10 +828,9 @@ async function init() {
     }
 
     if (toggleProgressButtonMobile) {
-      toggleProgressButtonMobile.addEventListener('click', () => {
-        showProgressLabel = !showProgressLabel;
+      toggleProgressButtonMobile.addEventListener('change', (e) => {
+        showProgressLabel = e.target.checked;
         localStorage.setItem('st-plan-progress-label', String(showProgressLabel));
-        toggleProgressButtonMobile.classList.toggle('progress-active', showProgressLabel);
         if (toggleProgressButton) {
           toggleProgressButton.classList.toggle('progress-active', showProgressLabel);
         }
@@ -962,6 +925,8 @@ async function init() {
       settingsButtonMobile.addEventListener('click', () => {
         if (settingsModal) {
           settingsModal.classList.remove('hidden');
+          document.body.classList.add('modal-open');
+          document.documentElement.classList.add('modal-open');
         }
       });
     }
@@ -1024,6 +989,11 @@ async function init() {
     }
 
     showProgressLabel = localStorage.getItem('st-plan-progress-label') === 'true';
+
+    // Initialize mobile progress checkbox
+    if (toggleProgressButtonMobile) {
+      toggleProgressButtonMobile.checked = showProgressLabel;
+    }
 
     filterCollapsed = getInitialFilterCollapsed();
     updateFilterState(filterCollapsed);

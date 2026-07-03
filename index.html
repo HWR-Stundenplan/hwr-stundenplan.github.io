@@ -54,9 +54,14 @@
         </div>
         <span class="text-xl font-bold tracking-tight" style="color: var(--text-primary);">Kursübersicht</span>
       </div>
-      <button id="settingsButtonMobile" type="button" aria-label="Einstellungen öffnen" style="display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: 999px; border: 1px solid var(--border-secondary); background: var(--button-bg); cursor: pointer;">
-        <span class="material-symbols-outlined" style="font-size: 1.25rem; color: var(--text-secondary);">settings</span>
-      </button>
+      <div class="flex items-center gap-2">
+        <button id="toggleFilterButtonMobile" type="button" aria-label="Filter" aria-expanded="false" style="display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: 999px; border: 1px solid var(--border-secondary); background: var(--button-bg); cursor: pointer;">
+          <span class="material-symbols-outlined toggle-icon" style="font-size: 1.25rem; color: var(--text-secondary);">filter_list</span>
+        </button>
+        <button id="settingsButtonMobile" type="button" aria-label="Einstellungen öffnen" style="display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: 999px; border: 1px solid var(--border-secondary); background: var(--button-bg); cursor: pointer;">
+          <span class="material-symbols-outlined" style="font-size: 1.25rem; color: var(--text-secondary);">settings</span>
+        </button>
+      </div>
     </header>
 
     <!-- Desktop Main -->
@@ -171,28 +176,30 @@
               <div class="days-grid" id="daysGrid"></div>
             </div>
           </div>
-          <div class="week-navigation-bottom mt-6 flex items-center justify-center gap-4">
-            <button id="prevWeekBottom" class="nav-button" type="button"><span class="material-symbols-outlined">chevron_left</span></button>
-            <div class="date-range-content">
-              <span class="material-symbols-outlined calendar-icon">calendar_month</span>
-              <span id="dateRangeLabelBottom" class="date-range-text">03. Juni - 09. Juni 2024</span>
-              <span id="weekBadgeBottom" class="week-badge">KW 23</span>
-            </div>
-            <button id="nextWeekBottom" class="nav-button" type="button"><span class="material-symbols-outlined">chevron_right</span></button>
-          </div>
         </div>
       </section>
     </main>
 
     <!-- Mobile Main -->
-    <main class="md:hidden pt-20 pb-10 px-4 min-h-screen max-w-md mx-auto" style="background: var(--bg-primary);">
+    <main class="md:hidden pt-44 pb-10 px-4 min-h-screen max-w-md mx-auto" style="background: var(--bg-primary);">
       
-      <!-- Filter Toggle Button (positioned outside collapsible content) -->
-      <div id="mobileFilterButtonContainer" class="mb-6">
-        <button id="toggleFilterButtonMobile" class="filter-toggle-mobile w-full flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50" type="button" aria-expanded="false">
-          <span class="material-symbols-outlined toggle-icon">expand_more</span> Filter
+      <!-- Week Navigation (fixed) -->
+      <div class="fixed top-20 left-4 right-4 z-40 max-w-md mx-auto flex items-center justify-between rounded-xl px-4 py-3 glass-morphism">
+        <button id="prevWeekMobile" class="rounded-lg p-2 text-gray-600 hover:bg-gray-100">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <div class="text-center">
+          <div class="flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-gray-500">calendar_month</span>
+            <span id="dateRangeLabelMobile" class="text-sm font-semibold text-gray-900">03. Juni - 09. Juni 2024</span>
+          </div>
+          <span id="weekBadgeMobile" class="mt-1 inline-block rounded-full bg-[#002551] px-2 py-0.5 text-xs font-bold text-white">KW 23</span>
+        </div>
+        <button id="nextWeekMobile" class="rounded-lg p-2 text-gray-600 hover:bg-gray-100">
+          <span class="material-symbols-outlined">chevron_right</span>
         </button>
       </div>
+
 
       <!-- Filter Panel Content (collapsible) -->
       <div id="mobileConfigPanel" class="mb-6 space-y-5 collapsed">
@@ -202,42 +209,6 @@
             <h2 class="mt-2 text-lg font-semibold text-[#002551]">Stundenplan konfigurieren</h2>
           </div>
           
-          <!-- Action Buttons Grid -->
-          <div class="grid grid-cols-2 gap-3">
-            <button id="toggleProgressLabelMobile" class="inline-flex flex-col items-center justify-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3 py-3 text-xs font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 hover:border-gray-400" type="button">
-              <span class="material-symbols-outlined text-lg">percent</span>
-              <span>Fortschritt</span>
-            </button>
-            <button id="currentWeek" class="inline-flex flex-col items-center justify-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3 py-3 text-xs font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 hover:border-gray-400" type="button">
-              <span class="material-symbols-outlined text-lg">today</span>
-              <span>Heute</span>
-            </button>
-            <button id="favoritesButtonMobile" class="inline-flex flex-col items-center justify-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3 py-3 text-xs font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 hover:border-gray-400 w-full" type="button">
-              <span class="material-symbols-outlined text-lg">star</span>
-              <span>Favoriten</span>
-            </button>
-            <button id="resetCacheMobile" class="inline-flex flex-col items-center justify-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3 py-3 text-xs font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 hover:border-gray-400" type="button">
-              <span class="material-symbols-outlined text-lg">refresh</span>
-              <span>Cache</span>
-            </button>
-            <button id="dozentenplanButtonMobile" class="inline-flex flex-col items-center justify-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3 py-3 text-xs font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 hover:border-gray-400" type="button">
-              <span class="material-symbols-outlined text-lg">person_search</span>
-              <span>Dozentenplan</span>
-            </button>
-          </div>
-
-          <!-- Favorites Display -->
-          <div id="mobileFavoritesDisplay" class="hidden rounded-xl bg-white p-3 border border-gray-200 mb-4">
-            <div class="mb-3">
-              <button id="addToFavoritesMobilePanel" class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#002551] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#003366]" type="button">
-                Hinzufügen
-              </button>
-              <p id="currentFavoriteLabelMobile" class="text-xs text-gray-400 text-center mt-1"></p>
-            </div>
-            <div id="favoritesListMobilePanel" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-              <p class="text-sm text-gray-500 text-center py-2 w-full">Keine Favoriten gespeichert</p>
-            </div>
-          </div>
         </div>
         <div id="mobileConfigContent" class="space-y-5">
           <div class="grid gap-4">
@@ -314,25 +285,15 @@
               </div>
             </label>
           </div>
+          <div class="mb-4">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" id="toggleProgressLabelMobile" class="w-5 h-5 rounded border-gray-300 text-[#002551] focus:ring-[#002551]">
+              <span class="text-sm font-medium text-gray-700">Tagesfortschritt anzeigen</span>
+            </label>
+          </div>
         </div>
       </div>
 
-      <!-- Week Navigation -->
-      <div class="mb-6 flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
-        <button id="prevWeekMobile" class="rounded-lg p-2 text-gray-600 hover:bg-gray-100">
-          <span class="material-symbols-outlined">chevron_left</span>
-        </button>
-        <div class="text-center">
-          <div class="flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined text-gray-500">calendar_month</span>
-            <span id="dateRangeLabelMobile" class="text-sm font-semibold text-gray-900">03. Juni - 09. Juni 2024</span>
-          </div>
-          <span id="weekBadgeMobile" class="mt-1 inline-block rounded-full bg-[#002551] px-2 py-0.5 text-xs font-bold text-white">KW 23</span>
-        </div>
-        <button id="nextWeekMobile" class="rounded-lg p-2 text-gray-600 hover:bg-gray-100">
-          <span class="material-symbols-outlined">chevron_right</span>
-        </button>
-      </div>
 
       <!-- Search -->
       <div id="searchContainerMobile" class="mb-6 relative">
@@ -348,25 +309,7 @@
         <!-- Days will be rendered here -->
       </div>
 
-      <!-- Week Navigation Bottom -->
-      <div class="mt-6 flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
-        <button id="prevWeekMobileBottom" class="rounded-lg p-2 text-gray-600 hover:bg-gray-100">
-          <span class="material-symbols-outlined">chevron_left</span>
-        </button>
-        <div class="text-center">
-          <div class="flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined text-gray-500">calendar_month</span>
-            <span id="dateRangeLabelMobileBottom" class="text-sm font-semibold text-gray-900">03. Juni - 09. Juni 2024</span>
-          </div>
-          <span id="weekBadgeMobileBottom" class="mt-1 inline-block rounded-full bg-[#002551] px-2 py-0.5 text-xs font-bold text-white">KW 23</span>
-        </div>
-        <button id="nextWeekMobileBottom" class="rounded-lg p-2 text-gray-600 hover:bg-gray-100">
-          <span class="material-symbols-outlined">chevron_right</span>
-        </button>
-      </div>
-
     </main>
-
   </div>
 
   <!-- Starter View Modal -->
